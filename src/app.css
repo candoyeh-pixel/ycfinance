@@ -1,0 +1,538 @@
+@import "tailwindcss";
+@import "@fontsource-variable/inter";
+
+@theme inline {
+  --default-font-family: "Noto Sans TC", -apple-system, BlinkMacSystemFont, "Hiragino Sans", "PingFang TC", sans-serif;
+  --font-sans: "Noto Sans TC", -apple-system, BlinkMacSystemFont, "Hiragino Sans", "PingFang TC", sans-serif;
+  --font-serif: "Noto Serif TC", "Hiragino Mincho ProN", "Songti TC", serif;
+  --font-latin: "Cormorant Garamond", "EB Garamond", serif;
+}
+
+:root {
+  --font-sans: "Noto Sans TC", -apple-system, BlinkMacSystemFont, "Hiragino Sans", "PingFang TC", sans-serif;
+  --font-serif: "Noto Serif TC", "Hiragino Mincho ProN", "Songti TC", serif;
+  --font-latin: "Cormorant Garamond", "EB Garamond", serif;
+  --bg: #FCFCFC;
+  --paper: #FAFAF8;
+  --bg-deep: #F2F2EF;
+  --ink: #1A1A1A;
+  --ink-2: #3D3D3D;
+  --muted: #8A8A85;
+  --line: #E5E3DD;
+  --line-2: #C8C5BD;
+  --rule: #1A1A1A;
+  --brand-red: #C2442A;
+  --sec: clamp(120px, 14vw, 220px);
+  --sec-top: 100px;
+
+  /*
+   * Typography scale — 日式編輯設計
+   * 精緻感 = 小字 + 大留白 + 高行高
+   * 對齊 intro-website 的原始設計
+   */
+
+  /* Body & UI text (×1.1) */
+  --text-xs: 12px;
+  /* uppercase tracking labels, badges, who */
+  --text-sm: 13px;
+  /* latin italic captions, meta, footnotes */
+  --text-nav: 15px;
+  /* nav links, footer links, buttons, text-link */
+  --text-body: 16.5px;
+  /* body copy — 明朝體 line-height 2.1~2.2 */
+  --text-base: 16.5px;
+  /* same as body — base size for the site */
+  --text-lg: 24px;
+  /* case result numbers, price emphasis */
+
+  /* Heading scale (×1.1) */
+  --text-h-card: clamp(18px, 1.65vw, 22px);
+  /* case titles, FAQ questions */
+  --text-h-sub: clamp(22px, 2.2vw, 29px);
+  /* sub-headings (principle h3, step titles) */
+  --text-h-quote: clamp(22px, 1.95vw, 29px);
+  /* quote grid text */
+  --text-h-pull: clamp(24px, 2.53vw, 30px);
+  /* pull quotes */
+  --text-h-section: clamp(29px, 3.52vw, 46px);
+  /* section headings */
+  --text-h-cta: clamp(33px, 4.62vw, 62px);
+  /* CTA headline */
+  --text-h-stat: clamp(44px, 5.06vw, 70px);
+  /* big stat numbers */
+  --text-h-roi: clamp(26px, 2.75vw, 40px);
+  /* ROI savings numbers */
+  --text-quote-mark: 79px;
+  /* decorative quotation mark */
+
+  /* Relative sizes (em-based, scales with parent) */
+  --text-en-label: 0.48em;
+  /* english label after section headings */
+  --text-stat-unit: 0.42em;
+  /* unit suffix on stat numbers */
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 56px;
+  /* 導覽列的高度 h-14 = 56px */
+}
+
+body {
+  font-family: var(--font-sans, "Noto Sans TC", sans-serif);
+  background: var(--bg);
+  color: var(--ink);
+  font-weight: 400;
+  line-height: 1.9;
+  font-size: var(--text-base);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "palt" 1, "kern" 1;
+}
+
+::selection {
+  background: var(--ink);
+  color: var(--bg);
+}
+
+/* ── Semantic text classes ── */
+
+/* Section heading: 明朝體, centered */
+.sec-title {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: var(--text-h-section);
+  letter-spacing: 0.24em;
+  color: var(--ink);
+  line-height: 1.6;
+  display: inline-block;
+}
+
+/* English label after section heading */
+.sec-en {
+  font-family: var(--font-latin);
+  font-style: italic;
+  font-size: var(--text-en-label);
+  letter-spacing: 0.18em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-left: 14px;
+  vertical-align: 0.15em;
+}
+
+/* Section intro paragraph */
+.sec-intro {
+  font-family: var(--font-serif);
+  font-size: var(--text-body);
+  line-height: 2.2;
+  color: var(--ink-2);
+  max-width: 780px;
+  margin: 32px auto 0;
+  text-wrap: pretty;
+}
+
+/* Sub-heading with english small text */
+.sub-title {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: var(--text-h-sub);
+  line-height: 1.7;
+  letter-spacing: 0.08em;
+  margin-bottom: 20px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.sub-title small {
+  display: block;
+  font-family: var(--font-latin);
+  font-style: italic;
+  font-size: var(--text-sm);
+  color: var(--muted);
+  letter-spacing: 0.2em;
+  margin-top: 6px;
+  font-weight: 400;
+  text-transform: uppercase;
+}
+
+/* Body copy: 明朝體 */
+.body-copy {
+  font-family: var(--font-serif);
+  font-size: var(--text-body);
+  line-height: 2.1;
+  color: var(--ink-2);
+}
+
+/* Muted meta text (latin italic) */
+.meta {
+  font-family: var(--font-latin);
+  font-style: italic;
+  font-size: var(--text-sm);
+  color: var(--muted);
+  letter-spacing: 0.22em;
+}
+
+/* Muted label (sans, uppercase) */
+.label-muted {
+  font-size: var(--text-xs);
+  color: var(--muted);
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+}
+
+/* Stat number */
+.stat-num {
+  font-family: var(--font-serif);
+  font-weight: 300;
+  font-size: var(--text-h-stat);
+  line-height: 1;
+  color: var(--ink);
+  letter-spacing: 0.01em;
+}
+
+.stat-num .unit {
+  font-weight: 400;
+  font-size: var(--text-stat-unit);
+  color: var(--muted);
+  margin-left: 4px;
+}
+
+/* Primary button */
+.btn-primary {
+  display: inline-flex;
+  gap: 14px;
+  align-items: center;
+  padding: 16px 30px;
+  background: var(--ink);
+  color: var(--bg);
+  font-family: var(--font-serif);
+  font-size: var(--text-nav);
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-decoration: none;
+  border: 1px solid var(--ink);
+  transition: background 0.2s, color 0.2s;
+}
+
+.btn-primary:hover {
+  background: transparent;
+  color: var(--ink);
+}
+
+.btn-primary svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Footer meta text */
+.foot-meta {
+  font-family: var(--font-latin);
+  font-style: italic;
+  font-size: var(--text-sm);
+  letter-spacing: 0.14em;
+  color: var(--muted);
+}
+
+/* ── Layout ── */
+.wrap {
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: 0 clamp(24px, 5vw, 80px);
+}
+
+/* ── Nav ── */
+.nav-link {
+  font-size: var(--text-nav);
+  color: var(--muted);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.nav-link:hover {
+  color: var(--ink);
+}
+
+/* ── Quote grid ── */
+.quote-cell {
+  padding: clamp(24px, 2.5vw, 40px);
+  background: #ffffff;
+  border: 1px solid #d7d7d7;
+  border-radius: 20px;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.8) inset, 0 2px 8px rgba(26, 26, 26, 0.03);
+  transition: border-color 0.2s ease, background 0.2s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.quote-cell:hover {
+  background: #f7f7f7;
+  border-color: #cfcfcf;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.85) inset, 0 4px 12px rgba(26, 26, 26, 0.04);
+}
+
+.quote-num {
+  font-family: var(--font-latin);
+  font-style: italic;
+  font-size: var(--text-body);
+  color: var(--ink);
+  letter-spacing: 0.06em;
+  min-width: 28px;
+}
+
+.quote-who {
+  font-size: 13px;
+  color: var(--muted);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-top: auto;
+}
+
+.quote-text {
+  font-family: var(--font-serif);
+  font-size: var(--text-base);
+  line-height: 1.8;
+  letter-spacing: 0.02em;
+  color: var(--ink);
+  text-wrap: pretty;
+}
+
+.quote-mark {
+  border-bottom: 1.5px solid var(--rule);
+  font-weight: 500;
+  padding-bottom: 1px;
+}
+
+/* ── Pull quote ── */
+.pull-quote-mark {
+  font-family: var(--font-latin);
+  font-size: var(--text-quote-mark);
+  color: var(--line-2);
+  line-height: 0.2;
+  display: block;
+  margin-bottom: 24px;
+}
+
+.pull-quote {
+  font-family: var(--font-serif);
+  font-size: var(--text-h-pull);
+  line-height: 1.85;
+  max-width: 860px;
+  margin: 0 auto;
+  letter-spacing: 0.04em;
+  color: var(--ink);
+  text-wrap: balance;
+}
+
+.pull-quote-em {
+  font-weight: 500;
+  border-bottom: 1.5px solid var(--rule);
+  padding-bottom: 2px;
+}
+
+/* ── Case rows ── */
+.case-row {
+  display: grid;
+  grid-template-columns: 100px 1fr auto;
+  gap: clamp(24px, 3vw, 40px);
+  align-items: start;
+  padding: clamp(32px, 4vw, 48px) 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.case-title {
+  font-family: var(--font-serif);
+  font-size: var(--text-h-card);
+  font-weight: 500;
+  margin-bottom: 8px;
+  letter-spacing: 0.02em;
+}
+
+.case-result {
+  font-family: var(--font-serif);
+  font-weight: 300;
+  font-size: var(--text-lg);
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+/* ── Stat cells ── */
+.stat-cell {
+  padding: clamp(36px, 4vw, 56px) 24px;
+  text-align: center;
+}
+
+/* ── ROI cells ── */
+.roi-cell {
+  padding: clamp(36px, 4vw, 56px) 24px;
+}
+
+.roi-num {
+  font-family: var(--font-serif);
+  font-weight: 300;
+  font-size: var(--text-h-roi);
+  line-height: 1;
+  color: var(--ink);
+}
+
+/* ── Step cells ── */
+.step-cell {
+  padding: clamp(40px, 5vw, 64px);
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.step-price {
+  font-family: var(--font-serif);
+  font-size: var(--text-base);
+  color: var(--ink);
+  font-weight: 500;
+  margin-bottom: 16px;
+}
+
+.step-tag {
+  font-family: var(--font-serif);
+  font-size: var(--text-sm);
+  color: var(--muted);
+  border: 1px solid var(--line-2);
+  padding: 4px 10px;
+  letter-spacing: 0.1em;
+}
+
+/* ── FAQ ── */
+.faq-q {
+  font-family: var(--font-serif);
+  font-size: var(--text-base);
+  font-weight: 500;
+  margin-bottom: 12px;
+  letter-spacing: 0.04em;
+}
+
+/* ── CTA ── */
+.cta-headline {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: var(--text-h-cta);
+  line-height: 1.55;
+  letter-spacing: 0.06em;
+  color: var(--ink);
+  margin-bottom: 40px;
+  text-wrap: balance;
+}
+
+.cta-tags {
+  margin-top: 48px;
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  flex-wrap: wrap;
+  font-family: var(--font-serif);
+  font-size: var(--text-nav);
+  color: var(--muted);
+  letter-spacing: 0.1em;
+}
+
+/* ── Footer ── */
+.foot-brand {
+  font-family: var(--font-serif);
+  font-size: var(--text-lg);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.foot-heading {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: var(--text-nav);
+  letter-spacing: 0.24em;
+  color: var(--ink);
+  margin-bottom: 22px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line-2);
+}
+
+.foot-heading small {
+  display: block;
+  font-family: var(--font-latin);
+  font-style: italic;
+  font-size: var(--text-xs);
+  color: var(--muted);
+  letter-spacing: 0.2em;
+  margin-top: 4px;
+  font-weight: 400;
+  text-transform: uppercase;
+}
+
+.foot-link {
+  font-size: var(--text-body);
+  color: var(--ink-2);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.foot-link:hover {
+  color: var(--ink);
+}
+
+/* Shared text-link style */
+.text-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  font-family: var(--font-serif);
+  font-size: var(--text-nav);
+  letter-spacing: 0.16em;
+  color: var(--ink);
+  text-decoration: none;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--rule);
+  transition: letter-spacing 0.25s;
+}
+
+.text-link::after {
+  content: "→";
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid var(--rule);
+  font-style: normal;
+  font-size: 12px;
+  transition: background 0.2s, color 0.2s, transform 0.2s;
+}
+
+.text-link:hover {
+  letter-spacing: 0.22em;
+}
+
+.text-link:hover::after {
+  background: var(--ink);
+  color: var(--bg);
+  transform: translateX(3px);
+}
+
+/* Range slider */
+input[type=range] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 1px;
+  margin: 26px 0 10px;
+  background: var(--line-2);
+  border-radius: 0;
+  outline: none;
+}
+
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--ink);
+  border: 2px solid var(--paper);
+  box-shadow: 0 0 0 1px var(--ink);
+  cursor: pointer;
+}
