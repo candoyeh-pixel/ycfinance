@@ -13,15 +13,15 @@
 
 	let isSubmitting = $state(false);
 
-	let activeDropdown = $state(null);
+	let activeDropdown = $state<string | null>(null);
 	let industryOptions = ['電商', '製造', '科技', '餐飲', '房地產', '金融', '醫療', '教育', '其他'];
-	let revenueOptions = ['台幣1000萬以下', '台幣1000~3000萬', '台幣3000萬以上'];
+	let revenueOptions = ['台幣3000萬以下（先了解）', '台幣3000萬～1億', '台幣1億以上'];
 
-	function toggleDropdown(dropdown) {
+	function toggleDropdown(dropdown: string) {
 		activeDropdown = activeDropdown === dropdown ? null : dropdown;
 	}
 
-	function selectOption(value, field) {
+	function selectOption(value: string, field: 'industry' | 'revenue') {
 		if (field === 'industry') {
 			formData.industry = value;
 		} else if (field === 'revenue') {
@@ -31,9 +31,9 @@
 	}
 
 	onMount(() => {
-		const handleClickOutside = (event) => {
-			const target = event.target;
-			if (!target.closest('.dropdown-container')) {
+		const handleClickOutside = (event: MouseEvent) => {
+			const target = event.target as Element | null;
+			if (!target?.closest('.dropdown-container')) {
 				activeDropdown = null;
 			}
 		};
@@ -209,7 +209,7 @@
 			time: "2～4 週",
 			price: "NT$ 30,000～50,000",
 			desc: "了解你的帳、建立月報模板、對齊科目口徑、定義追蹤單位。",
-			note: "一次性費用，50%可抵維護月費",
+			note: "一次性費用，可全額折抵月費（單月上限 NT$2,500）",
 		},
 		{
 			num: "03",
@@ -276,7 +276,7 @@
 </script>
 
 <svelte:head>
-	<title>奕成財創｜成長型企業財務治理夥伴</title>
+	<title>奕成財創｜成長型企業財務治理</title>
 	<meta
 		name="description"
 		content="從問題辨識、治理優化到分析上線與決策追蹤，協助成長型企業每月看清獲利、現金與風險。"
@@ -353,7 +353,7 @@
 				class="font-[var(--font-serif)] text-[var(--text-body)] font-semibold text-[var(--ink)] tracking-[0.06em]"
 				style="font-weight: 600; font-size: 19px; margin-bottom: 4px;"
 			>
-				<span style="font-family: var(--font-sans); font-weight: 600;">奕成財創</span>｜企業成長的財務夥伴
+				<span style="font-family: var(--font-sans); font-weight: 600;">奕成財創</span>｜成長型企業財務治理
 			</h1>
 			<p class="body-copy text-[var(--ink-2)] opacity-70 leading-snug" style="margin-top: 0; margin-bottom: 0;">
 				把財務數字，變成支撐成長的經營工具
@@ -760,8 +760,8 @@
 			<div>
 				<a href="/" class="foot-brand">奕成財創</a>
 				<p class="body-copy mt-6 max-w-[340px]">
-					成為台灣中小企業的外包財務長。<br
-					/>補上從財務資料到經營決策之間的關鍵治理能力。
+					協助台灣成長型企業，<br
+					/>把財務資料轉成可執行的經營決策。
 				</p>
 				<div class="meta mt-7" style="line-height: 2;">
 					contact@yicheng.finance
