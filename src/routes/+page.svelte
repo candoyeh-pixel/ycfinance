@@ -80,6 +80,22 @@
 		isSubmitting = false;
 	};
 
+	/* ── Scroll-reveal action ── */
+	function reveal(node: HTMLElement) {
+		const observer = new IntersectionObserver(
+			(entries) => {
+				entries.forEach((entry) => {
+					if (entry.isIntersecting) {
+						entry.target.classList.add('visible');
+						observer.unobserve(entry.target);
+					}
+				});
+			},
+			{ threshold: 0.15, rootMargin: '0px 0px -40px 0px' }
+		);
+		observer.observe(node);
+		return { destroy: () => observer.disconnect() };
+	}
 
 
 	const allChars = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "$"];
@@ -411,10 +427,10 @@
 	>
 		<div class="wrap">
 			<div class="text-center mb-[clamp(60px,7vw,100px)]">
-				<h2 class="sec-title">
+				<h2 class="sec-title reveal" use:reveal>
 					奕成財創<span class="sec-en">— About</span>
 				</h2>
-				<p class="sec-intro">
+				<p class="sec-intro reveal" use:reveal>
 					許多成長中的公司雖有財務資料，但卻無法支撐決策，
 					<br />
 					老闆不熟悉會計語言，會計人員沒有經營視角，
@@ -426,7 +442,7 @@
 			<div
 				class="max-w-[980px] mx-auto grid md:grid-cols-2 gap-[clamp(40px,6vw,96px)]"
 			>
-				<div>
+				<div class="reveal" use:reveal>
 					<h3 class="sub-title">
 						我們相信的事<small>What we believe</small>
 					</h3>
@@ -439,7 +455,7 @@
 						真正有價值的財務資訊，不只要正確，還要能主導經營決策。
 					</p>
 				</div>
-				<div>
+				<div class="reveal reveal-d1" use:reveal>
 					<h3 class="sub-title">
 						我們在做的事<small>What we do</small>
 					</h3>
@@ -464,10 +480,10 @@
 	>
 		<div class="wrap">
 			<div class="text-center mb-[clamp(60px,7vw,100px)]">
-				<h2 class="sec-title">
+				<h2 class="sec-title reveal" use:reveal>
 					常見困境<span class="sec-en">— Problem</span>
 				</h2>
-				<p class="sec-intro">
+				<p class="sec-intro reveal" use:reveal>
 					同樣的四個問題，每天在老闆心裡反覆出現。<br
 					/>這不是你的問題，這是大多數中小企業主的日常。
 				</p>
@@ -476,8 +492,8 @@
 			<div
 				class="max-w-[1240px] mx-auto grid md:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6"
 			>
-				{#each problemCards as q}
-					<div class="quote-cell">
+				{#each problemCards as q, i}
+					<div class="quote-cell reveal reveal-d{i}" use:reveal>
 						<p class="quote-text mb-5">
 							{q.text}<span class="quote-mark">{q.mark}</span
 							>{q.rest}
@@ -487,7 +503,7 @@
 				{/each}
 			</div>
 
-			<div class="mt-[clamp(80px,8vw,120px)] text-center">
+			<div class="mt-[clamp(80px,8vw,120px)] text-center reveal" use:reveal>
 				<span class="pull-quote-mark">&ldquo;</span>
 				<p class="pull-quote">
 					讓財務治理不再是經營的絆腳石，而是<strong
@@ -502,15 +518,15 @@
 	<section id="cases" class="border-t border-[var(--line)]" style="padding-top: var(--sec-top); padding-bottom: var(--sec);">
 		<div class="wrap">
 			<div class="text-center mb-[clamp(60px,7vw,100px)]">
-				<h2 class="sec-title">
+				<h2 class="sec-title reveal" use:reveal>
 					案例分享<span class="sec-en">— Cases</span>
 				</h2>
-				<p class="sec-intro">真實情境改編，客戶資訊已匿名處理。</p>
+				<p class="sec-intro reveal" use:reveal>真實情境改編，客戶資訊已匿名處理。</p>
 			</div>
 
 			<div class="border-t border-[var(--line)]">
 				{#each caseItems as c}
-					<div class="case-row">
+					<div class="case-row reveal" use:reveal>
 						<div class="meta uppercase pt-1">{c.ind}</div>
 						<div>
 							<h3 class="case-title">「{c.title}」</h3>
@@ -534,10 +550,10 @@
 	>
 		<div class="wrap">
 			<div class="text-center mb-[clamp(60px,7vw,100px)]">
-				<h2 class="sec-title">
+				<h2 class="sec-title reveal" use:reveal>
 					服務成果<span class="sec-en">— Impact & ROI</span>
 				</h2>
-				<p class="sec-intro">
+				<p class="sec-intro reveal" use:reveal>
 					以下數字來自代表性案例與保守估算，實際成效依產業型態與帳務基礎而異。
 				</p>
 			</div>
@@ -547,11 +563,12 @@
 			>
 				{#each impactStats as s, i}
 					<div
-						class="stat-cell {i % 3 !== 2
+						class="stat-cell reveal reveal-d{i} {i % 3 !== 2
 							? 'md:border-r border-[var(--line)]'
 							: ''} {i < 3
 							? 'md:border-b border-[var(--line)]'
 							: ''}"
+						use:reveal
 					>
 						<div class="meta uppercase mb-[18px]">{s.en}</div>
 						<div class="stat-num">
@@ -568,10 +585,10 @@
 	<section id="price" style="padding-top: var(--sec-top); padding-bottom: var(--sec);">
 		<div class="wrap">
 			<div class="text-center mb-[clamp(60px,7vw,100px)]">
-				<h2 class="sec-title">
+				<h2 class="sec-title reveal" use:reveal>
 					流程&費用<span class="sec-en">— Price</span>
 				</h2>
-				<p class="sec-intro">
+				<p class="sec-intro reveal" use:reveal>
 					奕成財創以獨創並持續迭代的 4P 財務治理框架™，
 					透過問題辨識（Probe）、治理優化（Process）、
 					分析上線（Pilot）與決策追蹤（Performance），
@@ -582,8 +599,8 @@
 			<div
 				class="grid md:grid-cols-3 border-t border-l border-[var(--line)]"
 			>
-				{#each processSteps as s}
-					<div class="step-cell">
+				{#each processSteps as s, i}
+					<div class="step-cell reveal reveal-d{i}" use:reveal>
 						<div class="meta mb-6">{s.num}</div>
 						<h3
 							class="sub-title"
@@ -609,14 +626,14 @@
 	>
 		<div class="wrap">
 			<div class="text-center mb-[clamp(60px,7vw,100px)]">
-				<h2 class="sec-title">
+				<h2 class="sec-title reveal" use:reveal>
 					常見問題<span class="sec-en">— FAQ</span>
 				</h2>
 			</div>
 
 			<div class="max-w-[920px] mx-auto divide-y divide-[var(--line)]">
 				{#each faqItems as faq}
-					<div class="py-8">
+					<div class="py-8 reveal" use:reveal>
 						<h3 class="faq-q">{faq.q}</h3>
 						<p class="body-copy max-w-[640px]">{faq.a}</p>
 					</div>
@@ -633,14 +650,14 @@
 	>
 		<div class="wrap">
 			<div class="mb-[clamp(40px,4vw,64px)] text-center">
-				<h2 class="sec-title">
+				<h2 class="sec-title reveal" use:reveal>
 					聯絡我們<span class="sec-en">— Contact</span>
 				</h2>
 			</div>
 
 			<div class="max-w-[800px] mx-auto">
 				<div class="text-center mb-12">
-					<h3 class="cta-headline mb-6">
+					<h3 class="cta-headline mb-6 reveal" use:reveal>
 						現在最簡單的一步，<br />是先做一次<span
 							class="border-b-2 border-[var(--rule)] pb-1"
 							>30 分鐘訪談</span
