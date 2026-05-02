@@ -23,6 +23,7 @@
 		formData.revenue
 	));
 
+	let activeCase = $state<number | null>(null);
 	let activeDropdown = $state<string | null>(null);
 	let industryOptions = ['電商', '製造', '科技', '餐飲', '房地產', '金融', '醫療', '教育', '其他'];
 	let revenueOptions = ['台幣3000萬以下（先了解）', '台幣3000萬～1億', '台幣1億以上'];
@@ -52,6 +53,19 @@
 					const y = target.getBoundingClientRect().top + window.scrollY - 76; 
 					window.scrollTo({ top: y, behavior: 'smooth' });
 				}, 150); // Start scrolling midway through the slide transition
+			}
+		}
+	}
+
+	function toggleCase(index: number, event: Event) {
+		activeCase = activeCase === index ? null : index;
+		if (activeCase === index) {
+			const target = (event.currentTarget as HTMLElement).closest('.case-item-wrap');
+			if (target) {
+				setTimeout(() => {
+					const y = target.getBoundingClientRect().top + window.scrollY - 76; 
+					window.scrollTo({ top: y, behavior: 'smooth' });
+				}, 150);
 			}
 		}
 	}
@@ -461,7 +475,7 @@
 <div class="min-h-screen bg-transparent relative z-0 overflow-hidden">
 	<!-- ─── NAV ─── -->
 	<nav
-		class="fixed top-0 inset-x-0 z-50 bg-white/90 backdrop-blur-sm border-b border-[var(--line)]"
+		class="fixed top-0 inset-x-0 z-50 transition-all duration-300 {scrollY > 20 ? 'bg-white/95 backdrop-blur-md border-b border-[var(--line)] shadow-sm' : 'bg-transparent border-b border-transparent shadow-none'}"
 	>
 		<div
 			class="max-w-[980px] mx-auto px-6 h-14 flex items-center justify-between"
@@ -653,17 +667,26 @@
 			</div>
 
 			<div class="border-t border-[var(--line)]">
-				{#each caseItems as c}
-					<div class="case-row reveal" use:reveal>
-						<div class="meta uppercase pt-1">{c.ind}</div>
-						<div>
-							<h3 class="case-title">「{c.title}」</h3>
-							<p class="body-copy">{c.desc}</p>
-						</div>
-						<div class="md:text-right md:min-w-[160px]">
-							<div class="case-result">{c.result}</div>
-							<div class="meta mt-1">{c.sub}</div>
-						</div>
+				{#each caseItems as c, i}
+					<div class="reveal case-item-wrap" use:reveal>
+						<button 
+							class="w-full text-left case-row group cursor-pointer"
+							onclick={(e) => toggleCase(i, e)}
+						>
+							<div class="meta uppercase pt-1 transition-opacity duration-300 {activeCase === i ? 'opacity-100' : 'opacity-60 group-hover:opacity-100'}">{c.ind}</div>
+							<div>
+								<h3 class="case-title transition-colors duration-300 {activeCase === i ? 'text-[var(--brand-red)]' : 'group-hover:text-[var(--ink-2)]'}">「{c.title}」</h3>
+								{#if activeCase === i}
+									<div transition:slide={{ duration: 400 }}>
+										<p class="body-copy mt-4 text-[var(--ink-2)]">{c.desc}</p>
+									</div>
+								{/if}
+							</div>
+							<div class="md:text-right md:min-w-[160px]">
+								<div class="case-result transition-transform duration-300 {activeCase === i ? 'scale-105 origin-right' : 'group-hover:scale-105 origin-right'}">{c.result}</div>
+								<div class="meta mt-1 opacity-60">{c.sub}</div>
+							</div>
+						</button>
 					</div>
 				{/each}
 			</div>
