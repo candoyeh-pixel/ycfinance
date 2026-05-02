@@ -97,18 +97,51 @@
 		return { destroy: () => observer.disconnect() };
 	}
 
-
 	const allChars = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "$"];
 	const COLS = 30;
 	const ROWS = 30;
-	const gridRows: string[][] = [];
-	for (let r = 0; r < ROWS; r++) {
-		const row: string[] = [];
-		for (let c = 0; c < COLS; c++) {
-			row.push(allChars[(r * 7 + c * 13) % allChars.length]);
-		}
-		gridRows.push(row);
-	}
+
+	/* Final target — random each page load */
+	const targetGrid = Array.from({ length: ROWS }, () =>
+		Array.from({ length: COLS }, () =>
+			allChars[Math.floor(Math.random() * allChars.length)]
+		)
+	);
+
+	let gridRows: string[][] = $state(
+		Array.from({ length: ROWS }, () =>
+			Array.from({ length: COLS }, () =>
+				allChars[Math.floor(Math.random() * allChars.length)]
+			)
+		)
+	);
+
+	/* ── Hero matrix: scramble → snap ── */
+	const SCRAMBLE_DURATION = 1800;
+	const SCRAMBLE_INTERVAL = 60;
+
+	onMount(() => {
+		const start = Date.now();
+		const timer = setInterval(() => {
+			if (Date.now() - start >= SCRAMBLE_DURATION) {
+				/* Snap: instantly freeze on target */
+				for (let r = 0; r < ROWS; r++) {
+					for (let c = 0; c < COLS; c++) {
+						gridRows[r][c] = targetGrid[r][c];
+					}
+				}
+				clearInterval(timer);
+				return;
+			}
+			/* Scramble: randomise all cells */
+			for (let r = 0; r < ROWS; r++) {
+				for (let c = 0; c < COLS; c++) {
+					gridRows[r][c] = allChars[Math.floor(Math.random() * allChars.length)];
+				}
+			}
+		}, SCRAMBLE_INTERVAL);
+		return () => clearInterval(timer);
+	});
 
 	const navLinks = [
 		{ href: "#about", label: "關於" },
@@ -223,6 +256,65 @@
 			label: "貸款 / 募資到位",
 		},
 	];
+
+	/* ── Counter animation ── */
+	const COUNTER_DURATION = 1200;
+	let statDisplay: string[] = $state(impactStats.map(() => ''));
+	let statsAnimated = false;
+
+	function parseStatNum(num: string): { isRange: boolean; a: number; b: number } {
+		if (num.includes('–')) {
+			const [a, b] = num.split('–').map(Number);
+			return { isRange: true, a, b };
+		}
+		return { isRange: false, a: Number(num), b: 0 };
+	}
+
+	function easeOutCubic(t: number) {
+		return 1 - Math.pow(1 - t, 3);
+	}
+
+	function animateCounters() {
+		if (statsAnimated) return;
+		statsAnimated = true;
+		const start = performance.now();
+
+		function tick(now: number) {
+			const elapsed = now - start;
+			const progress = Math.min(elapsed / COUNTER_DURATION, 1);
+			const eased = easeOutCubic(progress);
+
+			impactStats.forEach((s, i) => {
+				const parsed = parseStatNum(s.num);
+				if (parsed.isRange) {
+					const curA = Math.round(parsed.a * eased);
+					const curB = Math.round(parsed.b * eased);
+					statDisplay[i] = `${curA}–${curB}`;
+				} else {
+					statDisplay[i] = String(Math.round(parsed.a * eased));
+				}
+			});
+
+			if (progress < 1) requestAnimationFrame(tick);
+		}
+		requestAnimationFrame(tick);
+	}
+
+	function counterReveal(node: HTMLElement) {
+		const observer = new IntersectionObserver(
+			(entries) => {
+				entries.forEach((entry) => {
+					if (entry.isIntersecting) {
+						animateCounters();
+						observer.unobserve(entry.target);
+					}
+				});
+			},
+			{ threshold: 0.2 }
+		);
+		observer.observe(node);
+		return { destroy: () => observer.disconnect() };
+	}
 
 	const processSteps = [
 		{
@@ -560,6 +652,7 @@
 
 			<div
 				class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 border-t border-b border-[var(--line)]"
+				use:counterReveal
 			>
 				{#each impactStats as s, i}
 					<div
@@ -572,7 +665,7 @@
 					>
 						<div class="meta uppercase mb-[18px]">{s.en}</div>
 						<div class="stat-num">
-							{s.num}<span class="unit">{s.unit}</span>
+							{statDisplay[i] || s.num}<span class="unit">{s.unit}</span>
 						</div>
 						<div class="body-copy mt-5">{s.label}</div>
 					</div>
