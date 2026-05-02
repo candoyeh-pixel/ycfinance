@@ -14,20 +14,36 @@
 	});
 
 	let isSubmitting = $state(false);
-	let isFormComplete = $derived(Boolean(
-		formData.companyName &&
-		formData.name &&
-		formData.phone &&
-		formData.email &&
-		formData.industry &&
-		formData.revenue
-	));
+	let isFormComplete = $derived(
+		Boolean(
+			formData.companyName &&
+				formData.name &&
+				formData.phone &&
+				formData.email &&
+				formData.industry &&
+				formData.revenue,
+		),
+	);
 
 	let activeCase = $state<number | null>(null);
 	let activeDropdown = $state<string | null>(null);
 	let mobileMenuOpen = $state(false);
-	let industryOptions = ['電商', '製造', '科技', '餐飲', '房地產', '金融', '醫療', '教育', '其他'];
-	let revenueOptions = ['台幣3000萬以下（先了解）', '台幣3000萬～1億', '台幣1億以上'];
+	let industryOptions = [
+		"電商",
+		"製造",
+		"科技",
+		"餐飲",
+		"房地產",
+		"金融",
+		"醫療",
+		"教育",
+		"其他",
+	];
+	let revenueOptions = [
+		"台幣3000萬以下（先了解）",
+		"台幣3000萬～1億",
+		"台幣1億以上",
+	];
 
 	function toggleDropdown(dropdown: string) {
 		activeDropdown = activeDropdown === dropdown ? null : dropdown;
@@ -39,20 +55,25 @@
 		if (target) {
 			// Offset by 56px (h-14) for the fixed navbar
 			const y = target.getBoundingClientRect().top + window.scrollY - 56;
-			window.scrollTo({ top: y, behavior: 'smooth' });
-			window.history.pushState(null, '', href);
+			window.scrollTo({ top: y, behavior: "smooth" });
+			window.history.pushState(null, "", href);
 		}
 	}
 
 	function toggleFaq(index: number, event: Event) {
 		activeFaq = activeFaq === index ? null : index;
 		if (activeFaq === index) {
-			const target = (event.currentTarget as HTMLElement).closest('.faq-item-wrap');
+			const target = (event.currentTarget as HTMLElement).closest(
+				".faq-item-wrap",
+			);
 			if (target) {
 				setTimeout(() => {
 					// Add an extra 20px padding from the nav bar
-					const y = target.getBoundingClientRect().top + window.scrollY - 76; 
-					window.scrollTo({ top: y, behavior: 'smooth' });
+					const y =
+						target.getBoundingClientRect().top +
+						window.scrollY -
+						76;
+					window.scrollTo({ top: y, behavior: "smooth" });
 				}, 150); // Start scrolling midway through the slide transition
 			}
 		}
@@ -61,20 +82,25 @@
 	function toggleCase(index: number, event: Event) {
 		activeCase = activeCase === index ? null : index;
 		if (activeCase === index) {
-			const target = (event.currentTarget as HTMLElement).closest('.case-item-wrap');
+			const target = (event.currentTarget as HTMLElement).closest(
+				".case-item-wrap",
+			);
 			if (target) {
 				setTimeout(() => {
-					const y = target.getBoundingClientRect().top + window.scrollY - 76; 
-					window.scrollTo({ top: y, behavior: 'smooth' });
+					const y =
+						target.getBoundingClientRect().top +
+						window.scrollY -
+						76;
+					window.scrollTo({ top: y, behavior: "smooth" });
 				}, 150);
 			}
 		}
 	}
 
-	function selectOption(value: string, field: 'industry' | 'revenue') {
-		if (field === 'industry') {
+	function selectOption(value: string, field: "industry" | "revenue") {
+		if (field === "industry") {
 			formData.industry = value;
-		} else if (field === 'revenue') {
+		} else if (field === "revenue") {
 			formData.revenue = value;
 		}
 		activeDropdown = null;
@@ -83,12 +109,76 @@
 	onMount(() => {
 		const handleClickOutside = (event: MouseEvent) => {
 			const target = event.target as Element | null;
-			if (!target?.closest('.dropdown-container')) {
+			if (!target?.closest(".dropdown-container")) {
 				activeDropdown = null;
 			}
 		};
-		document.addEventListener('click', handleClickOutside);
-		return () => document.removeEventListener('click', handleClickOutside);
+		document.addEventListener("click", handleClickOutside);
+
+		let matrixTimer: ReturnType<typeof setInterval> | undefined;
+		if (matrixCanvas) {
+			const ctx = matrixCanvas.getContext("2d");
+			if (ctx) {
+				matrixCanvas.width = COLS * CELL_W;
+				matrixCanvas.height = ROWS * CELL_H;
+
+				const currentGrid = Array.from({ length: ROWS }, () =>
+					Array.from(
+						{ length: COLS },
+						() =>
+							allChars[
+								Math.floor(Math.random() * allChars.length)
+							],
+					),
+				);
+
+				const drawGrid = (grid: string[][]) => {
+					ctx.clearRect(
+						0,
+						0,
+						matrixCanvas.width,
+						matrixCanvas.height,
+					);
+					ctx.fillStyle = "#666666";
+					ctx.font = `800 36px "Noto Serif TC", serif`;
+					ctx.textAlign = "center";
+					ctx.textBaseline = "middle";
+					for (let r = 0; r < ROWS; r++) {
+						for (let c = 0; c < COLS; c++) {
+							ctx.fillText(
+								grid[r][c],
+								c * CELL_W + CELL_W / 2,
+								r * CELL_H + CELL_H / 2,
+							);
+						}
+					}
+				};
+
+				drawGrid(currentGrid);
+				const start = Date.now();
+				matrixTimer = setInterval(() => {
+					if (Date.now() - start >= SCRAMBLE_DURATION) {
+						drawGrid(targetGrid);
+						clearInterval(matrixTimer);
+						return;
+					}
+					for (let r = 0; r < ROWS; r++) {
+						for (let c = 0; c < COLS; c++) {
+							currentGrid[r][c] =
+								allChars[
+									Math.floor(Math.random() * allChars.length)
+								];
+						}
+					}
+					drawGrid(currentGrid);
+				}, SCRAMBLE_INTERVAL);
+			}
+		}
+
+		return () => {
+			document.removeEventListener("click", handleClickOutside);
+			if (matrixTimer) clearInterval(matrixTimer);
+		};
 	});
 	let submitMessage = $state("");
 
@@ -110,8 +200,16 @@
 			const result = await response.json().catch(() => null);
 
 			if (response.ok) {
-				submitMessage = result?.message ?? "預約成功！我們會盡快與您聯繫。";
-				formData = { companyName: "", name: "", phone: "", email: "", industry: "", revenue: "" };
+				submitMessage =
+					result?.message ?? "預約成功！我們會盡快與您聯繫。";
+				formData = {
+					companyName: "",
+					name: "",
+					phone: "",
+					email: "",
+					industry: "",
+					revenue: "",
+				};
 			} else {
 				submitMessage = result?.message ?? "提交失敗，請稍後再試。";
 			}
@@ -128,12 +226,12 @@
 			(entries) => {
 				entries.forEach((entry) => {
 					if (entry.isIntersecting) {
-						entry.target.classList.add('visible');
+						entry.target.classList.add("visible");
 						observer.unobserve(entry.target);
 					}
 				});
 			},
-			{ threshold: 0.15, rootMargin: '0px 0px -40px 0px' }
+			{ threshold: 0.15, rootMargin: "0px 0px -40px 0px" },
 		);
 		observer.observe(node);
 		return { destroy: () => observer.disconnect() };
@@ -142,48 +240,22 @@
 	const allChars = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "$"];
 	const COLS = 30;
 	const ROWS = 30;
+	const CELL_W = 54;
+	const CELL_H = 62;
 
 	/* Final target — random each page load */
 	const targetGrid = Array.from({ length: ROWS }, () =>
-		Array.from({ length: COLS }, () =>
-			allChars[Math.floor(Math.random() * allChars.length)]
-		)
-	);
-
-	let gridRows: string[][] = $state(
-		Array.from({ length: ROWS }, () =>
-			Array.from({ length: COLS }, () =>
-				allChars[Math.floor(Math.random() * allChars.length)]
-			)
-		)
+		Array.from(
+			{ length: COLS },
+			() => allChars[Math.floor(Math.random() * allChars.length)],
+		),
 	);
 
 	/* ── Hero matrix: scramble → snap ── */
 	const SCRAMBLE_DURATION = 1800;
 	const SCRAMBLE_INTERVAL = 60;
 
-	onMount(() => {
-		const start = Date.now();
-		const timer = setInterval(() => {
-			if (Date.now() - start >= SCRAMBLE_DURATION) {
-				/* Snap: instantly freeze on target */
-				for (let r = 0; r < ROWS; r++) {
-					for (let c = 0; c < COLS; c++) {
-						gridRows[r][c] = targetGrid[r][c];
-					}
-				}
-				clearInterval(timer);
-				return;
-			}
-			/* Scramble: randomise all cells */
-			for (let r = 0; r < ROWS; r++) {
-				for (let c = 0; c < COLS; c++) {
-					gridRows[r][c] = allChars[Math.floor(Math.random() * allChars.length)];
-				}
-			}
-		}, SCRAMBLE_INTERVAL);
-		return () => clearInterval(timer);
-	});
+	let matrixCanvas: HTMLCanvasElement;
 
 	const navLinks = [
 		{ href: "#about", label: "關於" },
@@ -222,46 +294,32 @@
 
 	const caseItems = [
 		{
-			ind: "加工出口製造",
-			title: "收到罰稅/查核後，完全不清楚為什麼被罰了天價稅款。",
-			desc: "多年沿用同一申報模式，查核時才暴露交易與稅務邏輯斷層。",
-			result: "罰款降96%",
-			sub: "釐清稅務風險",
-		},
-		{
 			ind: "跨境金融科技",
-			title: "我們要募資了，但財務資料混亂，經不起查核。",
-			desc: "跨美台中營運口徑不一致，募資前資料無法快速採信。",
+			title: "我要看現金和幾個關鍵數字，每次都要等人整理很久。",
+			desc: "公司裡有很多報表，但彼此沒有接起來；每次要資料都得先整理。",
 			result: "募得400萬美金",
 			sub: "通過四大查核",
 		},
 		{
-			ind: "跨境遊戲公司",
-			title: "跨國交易衍生許多稅務成本，大幅削減獲利能力。",
-			desc: "多法域交易流未優化，稅務成本與合規風險同步放大。",
-			result: "稅負降46%",
-			sub: "跨境合規化",
-		},
-		{
 			ind: "軟體新創公司",
-			title: "仍在草創階段，資源有限，無暇顧及財稅管理問題。",
-			desc: "先建最低可運作治理，再隨成長節奏逐步升級。",
+			title: "我平常就是看銀行餘額，真要談融資才發現數字拿不出去。",
+			desc: "資料平常都交給事務所處理，老闆自己看的數字和報表損益接不起來。",
 			result: "營收達1400萬",
 			sub: "取得900萬投資",
 		},
 		{
 			ind: "活動公關公司",
-			title: "只記現金流水帳，數字無法支撐經營決策。",
-			desc: "專案多、節奏亂，原有帳務看不到專案真實損益。",
-			result: "專案損益可視",
-			sub: "報表雙軸上線",
+			title: "每場活動做完到底賺多少，我其實講不準。",
+			desc: "活動損益和會計帳分開記，現金最緊的時間也看不出來。",
+			result: "活動損益可直接看",
+			sub: "財報與稅報查核完成",
 		},
 		{
 			ind: "國際貿易公司",
-			title: "財會人員缺乏經營邏輯，做不出老闆要的管理報表。",
-			desc: "帳務偏合規導向，無法回答獲利來源與現金壓力。",
-			result: "管報上線",
-			sub: "穩定月報節奏",
+			title: "報表每個月都有，但我一眼就看出怪數字。",
+			desc: "會計和系統都有，但科目、部門別、帳齡表都要先人工重整。",
+			result: "帳齡表可直接看",
+			sub: "管報可直接使用",
 		},
 	];
 
@@ -301,12 +359,16 @@
 
 	/* ── Counter animation ── */
 	const COUNTER_DURATION = 1200;
-	let statDisplay: string[] = $state(impactStats.map(() => ''));
+	let statDisplay: string[] = $state(impactStats.map(() => ""));
 	let statsAnimated = false;
 
-	function parseStatNum(num: string): { isRange: boolean; a: number; b: number } {
-		if (num.includes('–')) {
-			const [a, b] = num.split('–').map(Number);
+	function parseStatNum(num: string): {
+		isRange: boolean;
+		a: number;
+		b: number;
+	} {
+		if (num.includes("–")) {
+			const [a, b] = num.split("–").map(Number);
 			return { isRange: true, a, b };
 		}
 		return { isRange: false, a: Number(num), b: 0 };
@@ -352,7 +414,7 @@
 					}
 				});
 			},
-			{ threshold: 0.2 }
+			{ threshold: 0.2 },
 		);
 		observer.observe(node);
 		return { destroy: () => observer.disconnect() };
@@ -425,48 +487,24 @@
 				"事務所確保法遵，我們確保數字能支撐經營決策。",
 		},
 	];
-
-	const footerColumns = [
-		{
-			title: "服務",
-			en: "Service",
-			links: [
-				{ label: "財務快篩", href: "#contact" },
-				{ label: "導入期", href: "#price" },
-				{ label: "每月財務治理", href: "#price" },
-				{ label: "LINE 群同步", href: "#price" },
-			],
-		},
-		{
-			title: "資源",
-			en: "Resources",
-			links: [
-				{ label: "案例研究", href: "#cases" },
-				{ label: "服務成果", href: "#roi" },
-				{ label: "常見問題", href: "#faq" },
-			],
-		},
-		{
-			title: "公司",
-			en: "Company",
-			links: [
-				{ label: "關於我們", href: "#about" },
-				{ label: "聯絡我們", href: "#contact" },
-			],
-		},
-	];
 </script>
 
 <svelte:head>
 	<title>奕成財創｜成長型企業財務治理</title>
-	<meta name="description" content="從問題辨識、治理優化到分析上線與決策追蹤，協助成長型企業每月看清獲利、現金與風險。" />
+	<meta
+		name="description"
+		content="從問題辨識、治理優化到分析上線與決策追蹤，協助成長型企業每月看清獲利、現金與風險。"
+	/>
 	<link rel="canonical" href="https://yicheng.finance" />
 
 	<!-- Open Graph -->
 	<meta property="og:type" content="website" />
 	<meta property="og:url" content="https://yicheng.finance" />
 	<meta property="og:title" content="奕成財創｜成長型企業財務治理" />
-	<meta property="og:description" content="協助年營收 3,000 萬以上、正在擴張的企業，把財務資料轉成可執行的經營決策。" />
+	<meta
+		property="og:description"
+		content="協助年營收 3,000 萬以上、正在擴張的企業，把財務資料轉成可執行的經營決策。"
+	/>
 	<meta property="og:image" content="https://yicheng.finance/og-image.png" />
 	<meta property="og:image:width" content="1200" />
 	<meta property="og:image:height" content="630" />
@@ -476,21 +514,25 @@
 	<!-- Twitter Card -->
 	<meta name="twitter:card" content="summary_large_image" />
 	<meta name="twitter:title" content="奕成財創｜成長型企業財務治理" />
-	<meta name="twitter:description" content="協助年營收 3,000 萬以上、正在擴張的企業，把財務資料轉成可執行的經營決策。" />
+	<meta
+		name="twitter:description"
+		content="協助年營收 3,000 萬以上、正在擴張的企業，把財務資料轉成可執行的經營決策。"
+	/>
 	<meta name="twitter:image" content="https://yicheng.finance/og-image.png" />
 
 	<!-- JSON-LD Structured Data -->
 	{@html `<script type="application/ld+json">${JSON.stringify({
 		"@context": "https://schema.org",
 		"@type": "ProfessionalService",
-		"name": "奕成財創",
-		"url": "https://yicheng.finance",
-		"email": "contact@yicheng.finance",
-		"description": "協助成長型企業把財務資料轉成可執行的經營決策，透過問題辨識、治理優化、分析上線與決策追蹤，讓老闆每月看清獲利、現金與風險。",
-		"serviceType": "財務治理顧問",
-		"areaServed": { "@type": "Country", "name": "Taiwan" },
-		"inLanguage": "zh-Hant-TW",
-		"priceRange": "NT$25,000–65,000/月"
+		name: "奕成財創",
+		url: "https://yicheng.finance",
+		email: "contact@yicheng.finance",
+		description:
+			"協助成長型企業把財務資料轉成可執行的經營決策，透過問題辨識、治理優化、分析上線與決策追蹤，讓老闆每月看清獲利、現金與風險。",
+		serviceType: "財務治理顧問",
+		areaServed: { "@type": "Country", name: "Taiwan" },
+		inLanguage: "zh-Hant-TW",
+		priceRange: "NT$25,000–65,000/月",
 	})}</script>`}
 </svelte:head>
 
@@ -499,28 +541,54 @@
 <div class="min-h-screen bg-transparent relative z-0 overflow-hidden">
 	<!-- ─── NAV ─── -->
 	<nav
-		class="fixed top-0 inset-x-0 z-50 transition-all duration-300 {scrollY > 20 || mobileMenuOpen ? 'bg-white/95 backdrop-blur-md border-b border-[var(--line)] shadow-sm' : 'bg-transparent border-b border-transparent shadow-none'}"
+		class="fixed top-0 inset-x-0 z-50 transition-all duration-300 {scrollY >
+			20 || mobileMenuOpen
+			? 'bg-white/95 backdrop-blur-md border-b border-[var(--line)] shadow-sm'
+			: 'bg-transparent border-b border-transparent shadow-none'}"
 	>
-		<div class="max-w-[980px] mx-auto px-6 h-14 flex items-center justify-between">
+		<div
+			class="max-w-[980px] mx-auto px-6 h-14 flex items-center justify-between"
+		>
 			<a href="/" aria-label="奕成財創" class="flex items-center">
 				<img src="/yclogo.svg" alt="奕成財創 Logo" class="h-6 w-auto" />
 			</a>
 			<div class="hidden md:flex items-center gap-10">
 				{#each navLinks as link}
-					<a href={link.href} class="nav-link" onclick={(e) => scrollToAnchor(e, link.href)}>{link.label}</a>
+					<a
+						href={link.href}
+						class="nav-link"
+						onclick={(e) => scrollToAnchor(e, link.href)}
+						>{link.label}</a
+					>
 				{/each}
 			</div>
-			<a href="#contact" class="nav-link hidden md:block" onclick={(e) => scrollToAnchor(e, '#contact')}>聯絡我們</a>
+			<a
+				href="#contact"
+				class="nav-cta hidden md:block"
+				onclick={(e) => scrollToAnchor(e, "#contact")}>聯絡我們</a
+			>
 			<!-- 漢堡按鈕 (手機版) -->
 			<button
 				class="md:hidden flex flex-col justify-center gap-[5px] p-2 -mr-2"
-				onclick={() => mobileMenuOpen = !mobileMenuOpen}
-				aria-label={mobileMenuOpen ? '關閉選單' : '開啟選單'}
+				onclick={() => (mobileMenuOpen = !mobileMenuOpen)}
+				aria-label={mobileMenuOpen ? "關閉選單" : "開啟選單"}
 				aria-expanded={mobileMenuOpen}
 			>
-				<span class="block w-5 h-px bg-[var(--ink)] transition-all duration-300 origin-center {mobileMenuOpen ? 'rotate-45 translate-y-[6px]' : ''}"></span>
-				<span class="block w-5 h-px bg-[var(--ink)] transition-all duration-300 {mobileMenuOpen ? 'opacity-0' : ''}"></span>
-				<span class="block w-5 h-px bg-[var(--ink)] transition-all duration-300 origin-center {mobileMenuOpen ? '-rotate-45 -translate-y-[6px]' : ''}"></span>
+				<span
+					class="block w-5 h-px bg-[var(--ink)] transition-all duration-300 origin-center {mobileMenuOpen
+						? 'rotate-45 translate-y-[6px]'
+						: ''}"
+				></span>
+				<span
+					class="block w-5 h-px bg-[var(--ink)] transition-all duration-300 {mobileMenuOpen
+						? 'opacity-0'
+						: ''}"
+				></span>
+				<span
+					class="block w-5 h-px bg-[var(--ink)] transition-all duration-300 origin-center {mobileMenuOpen
+						? '-rotate-45 -translate-y-[6px]'
+						: ''}"
+				></span>
 			</button>
 		</div>
 		<!-- 手機版展開選單 -->
@@ -534,14 +602,20 @@
 						<a
 							href={link.href}
 							class="nav-link py-3.5 border-b border-[var(--line)]"
-							onclick={(e) => { scrollToAnchor(e, link.href); mobileMenuOpen = false; }}
-						>{link.label}</a>
+							onclick={(e) => {
+								scrollToAnchor(e, link.href);
+								mobileMenuOpen = false;
+							}}>{link.label}</a
+						>
 					{/each}
 					<a
 						href="#contact"
 						class="nav-link py-3.5"
-						onclick={(e) => { scrollToAnchor(e, '#contact'); mobileMenuOpen = false; }}
-					>聯絡我們</a>
+						onclick={(e) => {
+							scrollToAnchor(e, "#contact");
+							mobileMenuOpen = false;
+						}}>聯絡我們</a
+					>
 				</div>
 			</div>
 		{/if}
@@ -550,38 +624,21 @@
 	<!-- ─── ABSOLUTE MATRIX BACKGROUND ─── -->
 	<div
 		class="absolute inset-0 pointer-events-none -z-10"
-		style="perspective: 3000px; perspective-origin: 100% 100%; transform: translateY({scrollY * 0.4}px); height: 150vh;"
+		style="perspective: 3000px; perspective-origin: 100% 100%; transform: translateY({scrollY *
+			0.4}px); height: 150vh;"
 	>
-		<div
+		<canvas
+			bind:this={matrixCanvas}
 			class="select-none absolute transition-opacity duration-300"
 			aria-hidden="true"
 			style="
 				bottom: 15%; left: -90%;
-				width: 250%; height: 250%;
-				display: flex; flex-direction: column; align-items: center; justify-content: center;
+				width: 250%; height: auto;
 				transform: rotateX(-20deg) rotateY(0deg) rotateZ(-20deg);
 				transform-origin: center center;
-				font-family: var(--font-serif);
-				font-size: 36px;
-				line-height: 1.7;
-				letter-spacing: 0.3em;
-				font-weight: 800;
-				color: #666666;
-				white-space: nowrap;
 				opacity: {Math.max(0.08, 1 - scrollY / 600)};
 			"
-		>
-			{#each gridRows as row}
-				<div class="flex gap-[0.3em] justify-center">
-					{#each row as char}
-						<span
-							class="inline-block w-[1.2em] text-center overflow-hidden"
-							>{char}</span
-						>
-					{/each}
-				</div>
-			{/each}
-		</div>
+		></canvas>
 		<div
 			class="absolute inset-x-0 top-0 bg-gradient-to-b from-white to-transparent"
 			style="height: 15%;"
@@ -603,10 +660,15 @@
 				class="font-[var(--font-serif)] text-[var(--text-body)] font-semibold text-[var(--ink)] tracking-[0.06em]"
 				style="font-weight: 600; font-size: 19px; margin-bottom: 4px;"
 			>
-				<span style="font-family: var(--font-sans); font-weight: 600;">奕成財創</span>｜成長型企業財務治理
+				<span style="font-family: var(--font-sans); font-weight: 600;"
+					>奕成財創</span
+				>｜成長型企業財務治理
 			</h1>
-			<p class="body-copy text-[var(--ink-2)] opacity-70 leading-snug" style="margin-top: 0; margin-bottom: 0;">
-				每月看清獲利、現金與風險，讓擴張決策有數字依據
+			<p
+				class="body-copy text-[var(--ink-2)] opacity-70 leading-snug"
+				style="margin-top: 0; margin-bottom: 0;"
+			>
+				讓財務數字，支撐你的下一步決策
 			</p>
 			<div class="mt-6 flex flex-wrap justify-end gap-3">
 				<a href="#contact" class="btn-primary">
@@ -700,7 +762,10 @@
 				{/each}
 			</div>
 
-			<div class="mt-[clamp(80px,8vw,120px)] text-center reveal" use:reveal>
+			<div
+				class="mt-[clamp(80px,8vw,120px)] text-center reveal"
+				use:reveal
+			>
 				<span class="pull-quote-mark">&ldquo;</span>
 				<p class="pull-quote">
 					讓財務治理不再是經營的絆腳石，而是<strong
@@ -712,33 +777,64 @@
 	</section>
 
 	<!-- ─── CASES ─── -->
-	<section id="cases" class="border-t border-[var(--line)]" style="padding-top: var(--sec-top); padding-bottom: var(--sec);">
+	<section
+		id="cases"
+		class="border-t border-[var(--line)]"
+		style="padding-top: var(--sec-top); padding-bottom: var(--sec);"
+	>
 		<div class="wrap">
 			<div class="text-center mb-[clamp(60px,7vw,100px)]">
 				<h2 class="sec-title reveal" use:reveal>
 					案例分享<span class="sec-en">— Cases</span>
 				</h2>
-				<p class="sec-intro reveal" use:reveal>真實情境改編，客戶資訊已匿名處理。</p>
+				<p class="sec-intro reveal" use:reveal>
+					真實情境改編，客戶資訊已匿名處理。
+				</p>
 			</div>
 
 			<div class="border-t border-[var(--line)]">
 				{#each caseItems as c, i}
 					<div class="reveal case-item-wrap" use:reveal>
-						<button 
+						<button
 							class="w-full text-left case-row group cursor-pointer"
 							onclick={(e) => toggleCase(i, e)}
 						>
-							<div class="meta uppercase pt-1 transition-opacity duration-300 {activeCase === i ? 'opacity-100' : 'opacity-60 group-hover:opacity-100'}">{c.ind}</div>
+							<div
+								class="meta uppercase pt-1 transition-opacity duration-300 {activeCase ===
+								i
+									? 'opacity-100'
+									: 'opacity-60 group-hover:opacity-100'}"
+							>
+								{c.ind}
+							</div>
 							<div>
-								<h3 class="case-title transition-colors duration-300 {activeCase === i ? 'text-[var(--brand-primary)]' : 'group-hover:text-[var(--ink-2)]'}">「{c.title}」</h3>
+								<h3
+									class="case-title transition-colors duration-300 {activeCase ===
+									i
+										? 'text-[var(--brand-primary)]'
+										: 'group-hover:text-[var(--ink-2)]'}"
+								>
+									「{c.title}」
+								</h3>
 								{#if activeCase === i}
 									<div transition:slide={{ duration: 400 }}>
-										<p class="body-copy mt-4 text-[var(--ink-2)]">{c.desc}</p>
+										<p
+											class="body-copy mt-4 text-[var(--ink-2)]"
+										>
+											{c.desc}
+										</p>
 									</div>
 								{/if}
 							</div>
 							<div class="md:text-right md:min-w-[160px]">
-								<div class="case-result transition-transform duration-300 {activeCase === i ? 'scale-105 origin-right' : 'group-hover:scale-105 origin-right'}">{c.result}</div>
+								<div
+									class="case-result transition-transform duration-300 {activeCase ===
+									i
+										? 'scale-105 origin-right'
+										: 'group-hover:scale-105 origin-right'}"
+								>
+									{c.result}
+								</div>
 								<div class="meta mt-1 opacity-60">{c.sub}</div>
 							</div>
 						</button>
@@ -755,11 +851,21 @@
 		style="padding-top: var(--sec-top); padding-bottom: var(--sec);"
 	>
 		<div class="wrap">
-			<div class="text-center mb-[clamp(60px,7vw,100px)]">
-				<h2 class="sec-title reveal" use:reveal>
+			<div
+				class="flex flex-wrap items-baseline justify-between gap-6 mb-[clamp(48px,5vw,72px)]"
+			>
+				<h2
+					class="sec-title reveal"
+					use:reveal
+					style="font-size: clamp(22px, 2.4vw, 32px); letter-spacing: 0.14em;"
+				>
 					服務成果<span class="sec-en">— Impact & ROI</span>
 				</h2>
-				<p class="sec-intro reveal" use:reveal>
+				<p
+					class="reveal"
+					use:reveal
+					style="font-family: var(--font-serif); font-size: var(--text-body); color: var(--muted); line-height: 1.8; max-width: 460px;"
+				>
 					以下數字來自代表性案例與保守估算，實際成效依產業型態與帳務基礎而異。
 				</p>
 			</div>
@@ -779,7 +885,9 @@
 					>
 						<div class="meta uppercase mb-[18px]">{s.en}</div>
 						<div class="stat-num text-[var(--brand-primary)]">
-							{statDisplay[i] || s.num}<span class="unit">{s.unit}</span>
+							{statDisplay[i] || s.num}<span class="unit"
+								>{s.unit}</span
+							>
 						</div>
 						<div class="body-copy mt-5">{s.label}</div>
 					</div>
@@ -789,7 +897,10 @@
 	</section>
 
 	<!-- ─── PROCESS ─── -->
-	<section id="price" style="padding-top: var(--sec-top); padding-bottom: var(--sec);">
+	<section
+		id="price"
+		style="padding-top: var(--sec-top); padding-bottom: var(--sec);"
+	>
 		<div class="wrap">
 			<div class="text-center mb-[clamp(60px,7vw,100px)]">
 				<h2 class="sec-title reveal" use:reveal>
@@ -808,7 +919,7 @@
 			>
 				{#each processSteps as s, i}
 					<div class="step-cell reveal reveal-d{i}" use:reveal>
-						<div class="meta mb-6">{s.num}</div>
+						<div class="step-num">{s.num}</div>
 						<h3
 							class="sub-title"
 							style="border: none; padding: 0; margin-bottom: 8px;"
@@ -832,8 +943,8 @@
 		style="padding-top: var(--sec-top); padding-bottom: var(--sec);"
 	>
 		<div class="wrap">
-			<div class="text-center mb-[clamp(60px,7vw,100px)]">
-				<h2 class="sec-title reveal" use:reveal>
+			<div class="max-w-[920px] mx-auto">
+				<h2 class="sec-title reveal mb-[clamp(48px,6vw,80px)]" use:reveal>
 					常見問題<span class="sec-en">— FAQ</span>
 				</h2>
 			</div>
@@ -841,19 +952,30 @@
 			<div class="max-w-[920px] mx-auto divide-y divide-[var(--line)]">
 				{#each faqItems as faq, i}
 					<div class="py-8 reveal faq-item-wrap" use:reveal>
-						<button 
+						<button
 							class="w-full text-left flex justify-between items-center group cursor-pointer"
 							onclick={(e) => toggleFaq(i, e)}
 						>
-							<h3 class="faq-q group-hover:text-[var(--brand-primary)] transition-colors duration-300 m-0">{faq.q}</h3>
+							<h3
+								class="faq-q group-hover:text-[var(--brand-primary)] transition-colors duration-300 m-0"
+							>
+								{faq.q}
+							</h3>
 							<div class="faq-icon" class:open={activeFaq === i}>
 								<div class="faq-icon-line-h"></div>
 								<div class="faq-icon-line-v"></div>
 							</div>
 						</button>
 						{#if activeFaq === i}
-							<div transition:slide={{ duration: 400, easing: easeOutCubic }}>
-								<p class="body-copy max-w-[640px] pt-6">{faq.a}</p>
+							<div
+								transition:slide={{
+									duration: 400,
+									easing: easeOutCubic,
+								}}
+							>
+								<p class="body-copy max-w-[640px] pt-6">
+									{faq.a}
+								</p>
 							</div>
 						{/if}
 					</div>
@@ -866,7 +988,7 @@
 	<section
 		id="contact"
 		class="bg-[var(--paper)] border-t border-[var(--line)]"
-		style="padding-top: var(--sec-top); padding-bottom: var(--sec);"
+		style="padding-top: var(--sec-top); padding-bottom: clamp(64px,7vw,96px);"
 	>
 		<div class="wrap">
 			<div class="mb-[clamp(40px,4vw,64px)] text-center">
@@ -889,77 +1011,149 @@
 					</p>
 				</div>
 
-				<form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }} class="space-y-6">
+				<form
+					onsubmit={(e) => {
+						e.preventDefault();
+						handleSubmit();
+					}}
+					class="space-y-6"
+				>
 					<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-						<div class="flex items-baseline gap-2 border-b border-[var(--line)] pb-2">
-							<span class="whitespace-nowrap" style="font-family: var(--font-serif); font-size: var(--text-nav); color: var(--ink);">公司名稱</span>
-							<input 
-								type="text" 
+						<div
+							class="flex items-baseline gap-2 border-b border-[var(--line)] pb-2"
+						>
+							<span
+								class="whitespace-nowrap"
+								style="font-family: var(--font-serif); font-size: var(--text-nav); color: var(--ink);"
+								>公司名稱</span
+							>
+							<input
+								type="text"
 								bind:value={formData.companyName}
 								required
-								class="flex-1 min-w-0 bg-transparent text-[var(--ink)] focus:outline-none"
+								class="flex-1 min-w-0 bg-transparent text-[var(--ink)] focus:outline-none focus-visible:outline-1 focus-visible:outline-[var(--brand-primary)]"
 							/>
 						</div>
 
-						<div class="flex items-baseline gap-2 border-b border-[var(--line)] pb-2">
-							<span class="whitespace-nowrap" style="font-family: var(--font-serif); font-size: var(--text-nav); color: var(--ink);">姓名</span>
-							<input 
-								type="text" 
+						<div
+							class="flex items-baseline gap-2 border-b border-[var(--line)] pb-2"
+						>
+							<span
+								class="whitespace-nowrap"
+								style="font-family: var(--font-serif); font-size: var(--text-nav); color: var(--ink);"
+								>姓名</span
+							>
+							<input
+								type="text"
 								bind:value={formData.name}
 								required
-								class="flex-1 min-w-0 bg-transparent text-[var(--ink)] focus:outline-none"
+								class="flex-1 min-w-0 bg-transparent text-[var(--ink)] focus:outline-none focus-visible:outline-1 focus-visible:outline-[var(--brand-primary)]"
 							/>
 						</div>
 					</div>
 
 					<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-						<div class="flex items-baseline gap-2 border-b border-[var(--line)] pb-2">
-							<span class="whitespace-nowrap" style="font-family: var(--font-serif); font-size: var(--text-nav); color: var(--ink);">電話</span>
-							<input 
-								type="tel" 
+						<div
+							class="flex items-baseline gap-2 border-b border-[var(--line)] pb-2"
+						>
+							<span
+								class="whitespace-nowrap"
+								style="font-family: var(--font-serif); font-size: var(--text-nav); color: var(--ink);"
+								>電話</span
+							>
+							<input
+								type="tel"
 								bind:value={formData.phone}
 								required
-								class="flex-1 min-w-0 bg-transparent text-[var(--ink)] focus:outline-none"
+								class="flex-1 min-w-0 bg-transparent text-[var(--ink)] focus:outline-none focus-visible:outline-1 focus-visible:outline-[var(--brand-primary)]"
 							/>
 						</div>
 
-						<div class="flex items-baseline gap-2 border-b border-[var(--line)] pb-2">
-							<span class="whitespace-nowrap" style="font-family: var(--font-serif); font-size: var(--text-nav); color: var(--ink);">Email</span>
-							<input 
-								type="email" 
+						<div
+							class="flex items-baseline gap-2 border-b border-[var(--line)] pb-2"
+						>
+							<span
+								class="whitespace-nowrap"
+								style="font-family: var(--font-serif); font-size: var(--text-nav); color: var(--ink);"
+								>Email</span
+							>
+							<input
+								type="email"
 								bind:value={formData.email}
 								required
-								class="flex-1 min-w-0 bg-transparent text-[var(--ink)] focus:outline-none"
+								class="flex-1 min-w-0 bg-transparent text-[var(--ink)] focus:outline-none focus-visible:outline-1 focus-visible:outline-[var(--brand-primary)]"
 							/>
 						</div>
 					</div>
 
 					<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
 						<div class="relative dropdown-container">
-							<div 
+							<div
 								role="button"
 								tabindex="0"
-								onclick={() => toggleDropdown('industry')}
-								onkeydown={(e) => e.key === 'Enter' && toggleDropdown('industry')}
+								aria-haspopup="listbox"
+								aria-expanded={activeDropdown === "industry"}
+								aria-controls="industry-listbox"
+								aria-label="產業別：{formData.industry ||
+									'請選擇'}"
+								onclick={() => toggleDropdown("industry")}
+								onkeydown={(e) =>
+									(e.key === "Enter" || e.key === " ") &&
+									(e.preventDefault(),
+									toggleDropdown("industry"))}
 								class="flex items-baseline gap-2 border-b border-[var(--line)] pb-2 cursor-pointer select-none"
 							>
-								<span class="whitespace-nowrap" style="font-family: var(--font-serif); font-size: 0.95rem; color: var(--ink);">產業別</span>
-								<span class="flex-1" style="font-family: var(--font-serif); font-size: 0.95rem; color: {formData.industry ? 'var(--ink)' : 'var(--muted)'};">{formData.industry || '請選擇'}</span>
-								<svg class="w-3 h-3" style="color: var(--line-2);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
-									<polyline points="6 9 12 15 18 9"></polyline>
+								<span
+									class="whitespace-nowrap"
+									style="font-family: var(--font-serif); font-size: 0.95rem; color: var(--ink);"
+									>產業別</span
+								>
+								<span
+									class="flex-1"
+									style="font-family: var(--font-serif); font-size: 0.95rem; color: {formData.industry
+										? 'var(--ink)'
+										: 'var(--muted)'};"
+									>{formData.industry || "請選擇"}</span
+								>
+								<svg
+									class="w-3 h-3"
+									style="color: var(--line-2);"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="1"
+								>
+									<polyline points="6 9 12 15 18 9"
+									></polyline>
 								</svg>
 							</div>
-							{#if activeDropdown === 'industry'}
-								<div 
+							{#if activeDropdown === "industry"}
+								<div
+									id="industry-listbox"
+									role="listbox"
+									aria-label="產業別"
 									class="absolute top-full left-0 right-0 mt-1 z-20 border border-[var(--line)]"
 									style="background-color: var(--bg);"
 								>
 									{#each industryOptions as option}
 										<div
-											role="button"
+											role="option"
 											tabindex="0"
-											onclick={() => selectOption(option, 'industry')}
-											onkeydown={(e) => e.key === 'Enter' && selectOption(option, 'industry')}
+											aria-selected={formData.industry ===
+												option}
+											onclick={() =>
+												selectOption(
+													option,
+													"industry",
+												)}
+											onkeydown={(e) =>
+												(e.key === "Enter" ||
+													e.key === " ") &&
+												(e.preventDefault(),
+												selectOption(
+													option,
+													"industry",
+												))}
 											class="px-4 py-2 cursor-pointer hover:bg-[var(--paper)] transition-colors"
 											style="font-family: var(--font-serif); font-size: 0.95rem; color: var(--ink);"
 										>
@@ -971,30 +1165,69 @@
 						</div>
 
 						<div class="relative dropdown-container">
-							<div 
+							<div
 								role="button"
 								tabindex="0"
-								onclick={() => toggleDropdown('revenue')}
-								onkeydown={(e) => e.key === 'Enter' && toggleDropdown('revenue')}
+								aria-haspopup="listbox"
+								aria-expanded={activeDropdown === "revenue"}
+								aria-controls="revenue-listbox"
+								aria-label="營收規模：{formData.revenue ||
+									'請選擇'}"
+								onclick={() => toggleDropdown("revenue")}
+								onkeydown={(e) =>
+									(e.key === "Enter" || e.key === " ") &&
+									(e.preventDefault(),
+									toggleDropdown("revenue"))}
 								class="flex items-baseline gap-2 border-b border-[var(--line)] pb-2 cursor-pointer select-none"
 							>
-								<span class="whitespace-nowrap" style="font-family: var(--font-serif); font-size: 0.95rem; color: var(--ink);">營收規模</span>
-								<span class="flex-1" style="font-family: var(--font-serif); font-size: 0.95rem; color: {formData.revenue ? 'var(--ink)' : 'var(--muted)'};">{formData.revenue || '請選擇'}</span>
-								<svg class="w-3 h-3" style="color: var(--line-2);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
-									<polyline points="6 9 12 15 18 9"></polyline>
+								<span
+									class="whitespace-nowrap"
+									style="font-family: var(--font-serif); font-size: 0.95rem; color: var(--ink);"
+									>營收規模</span
+								>
+								<span
+									class="flex-1"
+									style="font-family: var(--font-serif); font-size: 0.95rem; color: {formData.revenue
+										? 'var(--ink)'
+										: 'var(--muted)'};"
+									>{formData.revenue || "請選擇"}</span
+								>
+								<svg
+									class="w-3 h-3"
+									style="color: var(--line-2);"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="1"
+								>
+									<polyline points="6 9 12 15 18 9"
+									></polyline>
 								</svg>
 							</div>
-							{#if activeDropdown === 'revenue'}
-								<div 
+							{#if activeDropdown === "revenue"}
+								<div
+									id="revenue-listbox"
+									role="listbox"
+									aria-label="營收規模"
 									class="absolute top-full left-0 right-0 mt-1 z-20 border border-[var(--line)]"
 									style="background-color: var(--bg);"
 								>
 									{#each revenueOptions as option}
 										<div
-											role="button"
+											role="option"
 											tabindex="0"
-											onclick={() => selectOption(option, 'revenue')}
-											onkeydown={(e) => e.key === 'Enter' && selectOption(option, 'revenue')}
+											aria-selected={formData.revenue ===
+												option}
+											onclick={() =>
+												selectOption(option, "revenue")}
+											onkeydown={(e) =>
+												(e.key === "Enter" ||
+													e.key === " ") &&
+												(e.preventDefault(),
+												selectOption(
+													option,
+													"revenue",
+												))}
 											class="px-4 py-2 cursor-pointer hover:bg-[var(--paper)] transition-colors"
 											style="font-family: var(--font-serif); font-size: 0.95rem; color: var(--ink);"
 										>
@@ -1020,7 +1253,13 @@
 					</div>
 
 					{#if submitMessage}
-						<p class="text-center text-sm mt-6 {submitMessage.includes('成功') ? 'text-green-600' : 'text-red-600'}">
+						<p
+							class="text-center text-sm mt-6 {submitMessage.includes(
+								'成功',
+							)
+								? 'text-green-600'
+								: 'text-red-600'}"
+						>
 							{submitMessage}
 						</p>
 					{/if}
@@ -1029,46 +1268,41 @@
 		</div>
 	</section>
 
-
-
 	<!-- ─── FOOTER ─── -->
 	<footer
 		class="bg-[var(--bg-deep)] border-t border-[var(--line)]"
-		style="padding: clamp(80px,8vw,120px) 0 44px;"
+		style="padding: clamp(28px,4vw,44px) 0 24px;"
 	>
-		<div class="wrap grid grid-cols-1 md:grid-cols-[1.4fr_1fr_1fr_1fr] gap-12">
-			<div>
-				<a href="/" class="inline-block" aria-label="奕成財創">
-					<img src="/yclogo.svg" alt="奕成財創 Logo" class="h-8 w-auto opacity-90 hover:opacity-100 transition-opacity" />
-				</a>
-				<p class="body-copy mt-6 max-w-[340px]">
-					協助台灣成長型企業，<br
-					/>把財務資料轉成可執行的經營決策。
-				</p>
-				<div class="meta mt-7" style="line-height: 2;">
-					contact@yicheng.finance
-				</div>
-			</div>
-			{#each footerColumns as col}
-				<div>
-					<h5 class="foot-heading">
-						{col.title}<small>{col.en}</small>
-					</h5>
-					<ul class="list-none p-0 m-0">
-						{#each col.links as link}
-							<li class="mb-3">
-								<a href={link.href} class="foot-link">{link.label}</a>
-							</li>
-						{/each}
-					</ul>
-				</div>
-			{/each}
-
+		<div class="wrap">
 			<div
-				class="col-span-full mt-[60px] pt-6 border-t border-[var(--line-2)] flex justify-between flex-wrap gap-4 foot-meta"
+				class="max-w-[980px] mx-auto flex flex-col md:flex-row md:items-end md:justify-between gap-6"
 			>
-				<span>&copy; 2026 奕成財創</span>
-				<span>Fractional CFO · 財務治理與決策支持 · 保密條款</span>
+				<div>
+					<div class="flex items-center gap-4">
+						<a href="/" class="inline-block shrink-0" aria-label="奕成財創">
+							<img
+								src="/yclogo.svg"
+								alt="奕成財創 Logo"
+								class="h-8 w-auto opacity-90 hover:opacity-100 transition-opacity"
+							/>
+						</a>
+						<p class="body-copy m-0 max-w-[440px]">
+							協助台灣成長型企業，把財務資料轉成可執行的經營決策。
+						</p>
+					</div>
+					<div class="meta mt-4" style="line-height: 1.8;">
+						<a
+							href="mailto:contact@yicheng.finance"
+							class="hover:text-[var(--ink)] transition-colors duration-200"
+							>contact@yicheng.finance</a
+						>
+					</div>
+				</div>
+					<div class="foot-meta md:text-right" style="line-height: 1.8;">
+					<div>&copy; 2026 奕成財創</div>
+					<div>Fractional CFO · 財務治理與決策支持</div>
+					<div>資料保密與隱私保護</div>
+				</div>
 			</div>
 		</div>
 	</footer>
