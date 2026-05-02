@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { ArrowRight } from "lucide-svelte";
 	import { onMount } from "svelte";
+	import { slide } from "svelte/transition";
+	let scrollY = $state(0);
 
 	let formData = $state({
 		companyName: "",
@@ -27,6 +29,31 @@
 
 	function toggleDropdown(dropdown: string) {
 		activeDropdown = activeDropdown === dropdown ? null : dropdown;
+	}
+
+	function scrollToAnchor(e: Event, href: string) {
+		e.preventDefault();
+		const target = document.querySelector(href);
+		if (target) {
+			// Offset by 56px (h-14) for the fixed navbar
+			const y = target.getBoundingClientRect().top + window.scrollY - 56;
+			window.scrollTo({ top: y, behavior: 'smooth' });
+			window.history.pushState(null, '', href);
+		}
+	}
+
+	function toggleFaq(index: number, event: Event) {
+		activeFaq = activeFaq === index ? null : index;
+		if (activeFaq === index) {
+			const target = (event.currentTarget as HTMLElement).closest('.faq-item-wrap');
+			if (target) {
+				setTimeout(() => {
+					// Add an extra 20px padding from the nav bar
+					const y = target.getBoundingClientRect().top + window.scrollY - 76; 
+					window.scrollTo({ top: y, behavior: 'smooth' });
+				}, 150); // Start scrolling midway through the slide transition
+			}
+		}
 	}
 
 	function selectOption(value: string, field: 'industry' | 'revenue') {
@@ -343,6 +370,8 @@
 		},
 	];
 
+	/* ── FAQ ── */
+	let activeFaq = $state<number | null>(null);
 	const faqItems = [
 		{
 			q: "我已經有會計了，還需要嗎？",
@@ -427,7 +456,9 @@
 	<meta name="twitter:card" content="summary" />
 </svelte:head>
 
-<div class="min-h-screen bg-[var(--bg)]">
+<svelte:window bind:scrollY />
+
+<div class="min-h-screen bg-transparent relative z-0 overflow-hidden">
 	<!-- ─── NAV ─── -->
 	<nav
 		class="fixed top-0 inset-x-0 z-50 bg-white/90 backdrop-blur-sm border-b border-[var(--line)]"
@@ -435,59 +466,64 @@
 		<div
 			class="max-w-[980px] mx-auto px-6 h-14 flex items-center justify-between"
 		>
-			<a href="/" style="font-size: var(--text-nav); font-family: var(--font-sans); font-weight: 600;">奕成財創</a>
+			<a href="/" aria-label="奕成財創" class="flex items-center">
+				<img src="/yclogo.svg" alt="奕成財創 Logo" class="h-6 w-auto" />
+			</a>
 			<div class="hidden md:flex items-center gap-10">
 				{#each navLinks as link}
-					<a href={link.href} class="nav-link">{link.label}</a>
+					<a href={link.href} class="nav-link" onclick={(e) => scrollToAnchor(e, link.href)}>{link.label}</a>
 				{/each}
 			</div>
-			<a href="#contact" class="nav-link">聯絡我們</a>
+			<a href="#contact" class="nav-link" onclick={(e) => scrollToAnchor(e, '#contact')}>聯絡我們</a>
 		</div>
 	</nav>
 
-	<!-- ─── HERO ─── -->
-	<section
-		class="relative overflow-hidden bg-white"
-		style="height: 100vh; min-height: 600px;"
+	<!-- ─── ABSOLUTE MATRIX BACKGROUND ─── -->
+	<div
+		class="absolute inset-0 pointer-events-none -z-10"
+		style="perspective: 3000px; perspective-origin: 100% 100%; transform: translateY({scrollY * 0.4}px); height: 150vh;"
 	>
 		<div
-			class="absolute inset-0 overflow-hidden"
-			style="perspective: 3000px; perspective-origin: 100% 100%;"
+			class="select-none absolute transition-opacity duration-300"
+			aria-hidden="true"
+			style="
+				bottom: 15%; left: -90%;
+				width: 250%; height: 250%;
+				display: flex; flex-direction: column; align-items: center; justify-content: center;
+				transform: rotateX(-20deg) rotateY(0deg) rotateZ(-20deg);
+				transform-origin: center center;
+				font-family: var(--font-serif);
+				font-size: 36px;
+				line-height: 1.7;
+				letter-spacing: 0.3em;
+				font-weight: 800;
+				color: #666666;
+				white-space: nowrap;
+				opacity: {Math.max(0.08, 1 - scrollY / 600)};
+			"
 		>
-			<div
-				class="select-none absolute"
-				aria-hidden="true"
-				style="
-					bottom: 15%; left: -90%;
-					width: 250%; height: 250%;
-					display: flex; flex-direction: column; align-items: center; justify-content: center;
-					transform: rotateX(-20deg) rotateY(0deg) rotateZ(-20deg);
-					transform-origin: center center;
-					font-family: var(--font-serif);
-					font-size: 36px;
-					line-height: 1.7;
-					letter-spacing: 0.3em;
-					font-weight: 800;
-					color: #666666;
-					white-space: nowrap;
-				"
-			>
-				{#each gridRows as row}
-					<div class="flex gap-[0.3em] justify-center">
-						{#each row as char}
-							<span
-								class="inline-block w-[1.2em] text-center overflow-hidden"
-								>{char}</span
-							>
-						{/each}
-					</div>
-				{/each}
-			</div>
+			{#each gridRows as row}
+				<div class="flex gap-[0.3em] justify-center">
+					{#each row as char}
+						<span
+							class="inline-block w-[1.2em] text-center overflow-hidden"
+							>{char}</span
+						>
+					{/each}
+				</div>
+			{/each}
 		</div>
 		<div
-			class="absolute inset-x-0 top-14 bg-gradient-to-b from-white to-transparent pointer-events-none"
-			style="height: 10%;"
+			class="absolute inset-x-0 top-0 bg-gradient-to-b from-white to-transparent"
+			style="height: 15%;"
 		></div>
+	</div>
+
+	<!-- ─── HERO ─── -->
+	<section
+		class="relative bg-transparent"
+		style="height: 100vh; min-height: 600px;"
+	>
 		<div
 			class="absolute bottom-10 right-8 md:bottom-16 md:right-16 text-right z-10 max-w-[520px]"
 		>
@@ -725,10 +761,23 @@
 			</div>
 
 			<div class="max-w-[920px] mx-auto divide-y divide-[var(--line)]">
-				{#each faqItems as faq}
-					<div class="py-8 reveal" use:reveal>
-						<h3 class="faq-q">{faq.q}</h3>
-						<p class="body-copy max-w-[640px]">{faq.a}</p>
+				{#each faqItems as faq, i}
+					<div class="py-8 reveal faq-item-wrap" use:reveal>
+						<button 
+							class="w-full text-left flex justify-between items-center group cursor-pointer"
+							onclick={(e) => toggleFaq(i, e)}
+						>
+							<h3 class="faq-q group-hover:text-[var(--primary)] transition-colors duration-300 m-0">{faq.q}</h3>
+							<div class="faq-icon" class:open={activeFaq === i}>
+								<div class="faq-icon-line-h"></div>
+								<div class="faq-icon-line-v"></div>
+							</div>
+						</button>
+						{#if activeFaq === i}
+							<div transition:slide={{ duration: 400, easing: easeOutCubic }}>
+								<p class="body-copy max-w-[640px] pt-6">{faq.a}</p>
+							</div>
+						{/if}
 					</div>
 				{/each}
 			</div>
@@ -911,7 +960,9 @@
 	>
 		<div class="wrap grid grid-cols-1 md:grid-cols-[1.4fr_1fr_1fr_1fr] gap-12">
 			<div>
-				<a href="/" class="foot-brand">奕成財創</a>
+				<a href="/" class="inline-block" aria-label="奕成財創">
+					<img src="/yclogo.svg" alt="奕成財創 Logo" class="h-8 w-auto opacity-90 hover:opacity-100 transition-opacity" />
+				</a>
 				<p class="body-copy mt-6 max-w-[340px]">
 					協助台灣成長型企業，<br
 					/>把財務資料轉成可執行的經營決策。

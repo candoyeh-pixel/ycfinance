@@ -461,8 +461,43 @@ body {
   font-family: var(--font-serif);
   font-size: var(--text-base);
   font-weight: 500;
-  margin-bottom: 12px;
   letter-spacing: 0.04em;
+}
+
+.faq-icon {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  margin-left: 24px;
+}
+
+.faq-icon-line-h, .faq-icon-line-v {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  background-color: var(--ink);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.3s ease;
+  transform: translate(-50%, -50%);
+}
+
+.faq-icon-line-h {
+  width: 14px;
+  height: 1px;
+}
+
+.faq-icon-line-v {
+  width: 1px;
+  height: 14px;
+}
+
+.faq-icon.open .faq-icon-line-v {
+  transform: translate(-50%, -50%) rotate(90deg);
+}
+
+.group:hover .faq-icon-line-h,
+.group:hover .faq-icon-line-v {
+  background-color: var(--primary);
 }
 
 /* ── CTA ── */
