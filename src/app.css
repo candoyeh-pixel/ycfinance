@@ -1,6 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
-@import "@fontsource-variable/inter";
 
 @theme inline {
   --default-font-family: "Noto Sans TC", -apple-system, BlinkMacSystemFont, "Hiragino Sans", "PingFang TC", sans-serif;
@@ -607,6 +605,48 @@ input[type=range]::-webkit-slider-thumb {
 @media (max-width: 640px) {
   .about-trigger-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .sec-title {
+    letter-spacing: 0.14em;
+  }
+
+  .sec-en {
+    display: block;
+    margin-left: 0;
+    margin-top: 8px;
+  }
+
+  .case-row {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 34px 0;
+  }
+
+  .case-row .meta {
+    font-size: 13px;
+    line-height: 1.7;
+  }
+
+  .case-title {
+    font-size: 20px;
+    line-height: 1.65;
+  }
+
+  .case-result {
+    font-size: 22px;
+  }
+
+  .cta-headline {
+    font-size: clamp(30px, 8vw, 42px);
+    line-height: 1.55;
+  }
+
+  .btn-primary {
+    width: 100%;
+    justify-content: center;
   }
 }
 

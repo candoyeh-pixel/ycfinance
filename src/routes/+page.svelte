@@ -12,6 +12,14 @@
 	});
 
 	let isSubmitting = $state(false);
+	let isFormComplete = $derived(Boolean(
+		formData.companyName &&
+		formData.name &&
+		formData.phone &&
+		formData.email &&
+		formData.industry &&
+		formData.revenue
+	));
 
 	let activeDropdown = $state<string | null>(null);
 	let industryOptions = ['電商', '製造', '科技', '餐飲', '房地產', '金融', '醫療', '教育', '其他'];
@@ -43,6 +51,11 @@
 	let submitMessage = $state("");
 
 	const handleSubmit = async () => {
+		if (!isFormComplete) {
+			submitMessage = "請先完整填寫表單欄位。";
+			return;
+		}
+
 		isSubmitting = true;
 		submitMessage = "";
 
@@ -52,12 +65,13 @@
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify(formData),
 			});
+			const result = await response.json().catch(() => null);
 
 			if (response.ok) {
-				submitMessage = "預約成功！我們會盡快與您聯繫。";
+				submitMessage = result?.message ?? "預約成功！我們會盡快與您聯繫。";
 				formData = { companyName: "", name: "", phone: "", email: "", industry: "", revenue: "" };
 			} else {
-				submitMessage = "提交失敗，請稍後再試。";
+				submitMessage = result?.message ?? "提交失敗，請稍後再試。";
 			}
 		} catch {
 			submitMessage = "發生錯誤，請稍後再試。";
@@ -84,7 +98,7 @@
 		{ href: "#about", label: "關於" },
 		{ href: "#problem", label: "問題" },
 		{ href: "#cases", label: "案例" },
-		{ href: "#roi", label: "定價" },
+		{ href: "#price", label: "流程費用" },
 		{ href: "#faq", label: "常見問題" },
 	];
 
@@ -264,14 +278,30 @@
 		{
 			title: "服務",
 			en: "Service",
-			links: ["財務快篩", "導入期", "每月財務治理", "LINE 群同步"],
+			links: [
+				{ label: "財務快篩", href: "#contact" },
+				{ label: "導入期", href: "#price" },
+				{ label: "每月財務治理", href: "#price" },
+				{ label: "LINE 群同步", href: "#price" },
+			],
 		},
 		{
 			title: "資源",
 			en: "Resources",
-			links: ["案例研究", "服務說明書", "定價策略"],
+			links: [
+				{ label: "案例研究", href: "#cases" },
+				{ label: "服務成果", href: "#roi" },
+				{ label: "常見問題", href: "#faq" },
+			],
 		},
-		{ title: "公司", en: "Company", links: ["關於我們", "隱私政策"] },
+		{
+			title: "公司",
+			en: "Company",
+			links: [
+				{ label: "關於我們", href: "#about" },
+				{ label: "聯絡我們", href: "#contact" },
+			],
+		},
 	];
 </script>
 
@@ -281,6 +311,12 @@
 		name="description"
 		content="從問題辨識、治理優化到分析上線與決策追蹤，協助成長型企業每月看清獲利、現金與風險。"
 	/>
+	<meta property="og:title" content="奕成財創｜成長型企業財務治理" />
+	<meta
+		property="og:description"
+		content="協助年營收 3,000 萬以上、正在擴張的企業，把財務資料轉成可執行的經營決策。"
+	/>
+	<meta name="twitter:card" content="summary" />
 </svelte:head>
 
 <div class="min-h-screen bg-[var(--bg)]">
@@ -312,6 +348,7 @@
 		>
 			<div
 				class="select-none absolute"
+				aria-hidden="true"
 				style="
 					bottom: 15%; left: -90%;
 					width: 250%; height: 250%;
@@ -344,7 +381,7 @@
 			style="height: 10%;"
 		></div>
 		<div
-			class="absolute bottom-12 right-8 md:bottom-16 md:right-16 text-right z-10 max-w-[420px]"
+			class="absolute bottom-10 right-8 md:bottom-16 md:right-16 text-right z-10 max-w-[520px]"
 		>
 			<p class="meta tracking-widest uppercase mb-3">
 				Fractional CFO for SMBs
@@ -356,8 +393,14 @@
 				<span style="font-family: var(--font-sans); font-weight: 600;">奕成財創</span>｜成長型企業財務治理
 			</h1>
 			<p class="body-copy text-[var(--ink-2)] opacity-70 leading-snug" style="margin-top: 0; margin-bottom: 0;">
-				把財務數字，變成支撐成長的經營工具
+				每月看清獲利、現金與風險，讓擴張決策有數字依據
 			</p>
+			<div class="mt-6 flex flex-wrap justify-end gap-3">
+				<a href="#contact" class="btn-primary">
+					預約30分鐘訪談
+					<ArrowRight class="w-3.5 h-3.5" />
+				</a>
+			</div>
 		</div>
 	</section>
 
@@ -522,7 +565,7 @@
 	</section>
 
 	<!-- ─── PROCESS ─── -->
-	<section style="padding-top: var(--sec-top); padding-bottom: var(--sec);">
+	<section id="price" style="padding-top: var(--sec-top); padding-bottom: var(--sec);">
 		<div class="wrap">
 			<div class="text-center mb-[clamp(60px,7vw,100px)]">
 				<h2 class="sec-title">
@@ -610,14 +653,14 @@
 				</div>
 
 				<form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }} class="space-y-6">
-					<div class="grid grid-cols-2 gap-8">
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
 						<div class="flex items-baseline gap-2 border-b border-[var(--line)] pb-2">
 							<span class="whitespace-nowrap" style="font-family: var(--font-serif); font-size: var(--text-nav); color: var(--ink);">公司名稱</span>
 							<input 
 								type="text" 
 								bind:value={formData.companyName}
 								required
-								class="flex-1 bg-transparent text-[var(--text)] focus:outline-none"
+								class="flex-1 min-w-0 bg-transparent text-[var(--ink)] focus:outline-none"
 							/>
 						</div>
 
@@ -627,19 +670,19 @@
 								type="text" 
 								bind:value={formData.name}
 								required
-								class="flex-1 bg-transparent text-[var(--text)] focus:outline-none"
+								class="flex-1 min-w-0 bg-transparent text-[var(--ink)] focus:outline-none"
 							/>
 						</div>
 					</div>
 
-					<div class="grid grid-cols-2 gap-8">
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
 						<div class="flex items-baseline gap-2 border-b border-[var(--line)] pb-2">
 							<span class="whitespace-nowrap" style="font-family: var(--font-serif); font-size: var(--text-nav); color: var(--ink);">電話</span>
 							<input 
 								type="tel" 
 								bind:value={formData.phone}
 								required
-								class="flex-1 bg-transparent text-[var(--text)] focus:outline-none"
+								class="flex-1 min-w-0 bg-transparent text-[var(--ink)] focus:outline-none"
 							/>
 						</div>
 
@@ -649,12 +692,12 @@
 								type="email" 
 								bind:value={formData.email}
 								required
-								class="flex-1 bg-transparent text-[var(--text)] focus:outline-none"
+								class="flex-1 min-w-0 bg-transparent text-[var(--ink)] focus:outline-none"
 							/>
 						</div>
 					</div>
 
-					<div class="grid grid-cols-2 gap-8">
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
 						<div class="relative dropdown-container">
 							<div 
 								role="button"
@@ -664,7 +707,7 @@
 								class="flex items-baseline gap-2 border-b border-[var(--line)] pb-2 cursor-pointer select-none"
 							>
 								<span class="whitespace-nowrap" style="font-family: var(--font-serif); font-size: 0.95rem; color: var(--ink);">產業別</span>
-								<span class="flex-1" style="font-family: var(--font-serif); font-size: 0.95rem; color: var(--ink);">{formData.industry}</span>
+								<span class="flex-1" style="font-family: var(--font-serif); font-size: 0.95rem; color: {formData.industry ? 'var(--ink)' : 'var(--muted)'};">{formData.industry || '請選擇'}</span>
 								<svg class="w-3 h-3" style="color: var(--line-2);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
 									<polyline points="6 9 12 15 18 9"></polyline>
 								</svg>
@@ -699,7 +742,7 @@
 								class="flex items-baseline gap-2 border-b border-[var(--line)] pb-2 cursor-pointer select-none"
 							>
 								<span class="whitespace-nowrap" style="font-family: var(--font-serif); font-size: 0.95rem; color: var(--ink);">營收規模</span>
-								<span class="flex-1" style="font-family: var(--font-serif); font-size: 0.95rem; color: var(--ink);">{formData.revenue}</span>
+								<span class="flex-1" style="font-family: var(--font-serif); font-size: 0.95rem; color: {formData.revenue ? 'var(--ink)' : 'var(--muted)'};">{formData.revenue || '請選擇'}</span>
 								<svg class="w-3 h-3" style="color: var(--line-2);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
 									<polyline points="6 9 12 15 18 9"></polyline>
 								</svg>
@@ -756,7 +799,7 @@
 		class="bg-[var(--bg-deep)] border-t border-[var(--line)]"
 		style="padding: clamp(80px,8vw,120px) 0 44px;"
 	>
-		<div class="wrap grid grid-cols-[1.4fr_1fr_1fr_1fr] gap-12">
+		<div class="wrap grid grid-cols-1 md:grid-cols-[1.4fr_1fr_1fr_1fr] gap-12">
 			<div>
 				<a href="/" class="foot-brand">奕成財創</a>
 				<p class="body-copy mt-6 max-w-[340px]">
@@ -775,7 +818,7 @@
 					<ul class="list-none p-0 m-0">
 						{#each col.links as link}
 							<li class="mb-3">
-								<a href="#contact" class="foot-link">{link}</a>
+								<a href={link.href} class="foot-link">{link.label}</a>
 							</li>
 						{/each}
 					</ul>
