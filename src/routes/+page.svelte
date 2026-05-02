@@ -25,6 +25,7 @@
 
 	let activeCase = $state<number | null>(null);
 	let activeDropdown = $state<string | null>(null);
+	let mobileMenuOpen = $state(false);
 	let industryOptions = ['電商', '製造', '科技', '餐飲', '房地產', '金融', '醫療', '教育', '其他'];
 	let revenueOptions = ['台幣3000萬以下（先了解）', '台幣3000萬～1億', '台幣1億以上'];
 
@@ -458,16 +459,39 @@
 
 <svelte:head>
 	<title>奕成財創｜成長型企業財務治理</title>
-	<meta
-		name="description"
-		content="從問題辨識、治理優化到分析上線與決策追蹤，協助成長型企業每月看清獲利、現金與風險。"
-	/>
+	<meta name="description" content="從問題辨識、治理優化到分析上線與決策追蹤，協助成長型企業每月看清獲利、現金與風險。" />
+	<link rel="canonical" href="https://yicheng.finance" />
+
+	<!-- Open Graph -->
+	<meta property="og:type" content="website" />
+	<meta property="og:url" content="https://yicheng.finance" />
 	<meta property="og:title" content="奕成財創｜成長型企業財務治理" />
-	<meta
-		property="og:description"
-		content="協助年營收 3,000 萬以上、正在擴張的企業，把財務資料轉成可執行的經營決策。"
-	/>
-	<meta name="twitter:card" content="summary" />
+	<meta property="og:description" content="協助年營收 3,000 萬以上、正在擴張的企業，把財務資料轉成可執行的經營決策。" />
+	<meta property="og:image" content="https://yicheng.finance/og-image.png" />
+	<meta property="og:image:width" content="1200" />
+	<meta property="og:image:height" content="630" />
+	<meta property="og:locale" content="zh_TW" />
+	<meta property="og:site_name" content="奕成財創" />
+
+	<!-- Twitter Card -->
+	<meta name="twitter:card" content="summary_large_image" />
+	<meta name="twitter:title" content="奕成財創｜成長型企業財務治理" />
+	<meta name="twitter:description" content="協助年營收 3,000 萬以上、正在擴張的企業，把財務資料轉成可執行的經營決策。" />
+	<meta name="twitter:image" content="https://yicheng.finance/og-image.png" />
+
+	<!-- JSON-LD Structured Data -->
+	{@html `<script type="application/ld+json">${JSON.stringify({
+		"@context": "https://schema.org",
+		"@type": "ProfessionalService",
+		"name": "奕成財創",
+		"url": "https://yicheng.finance",
+		"email": "contact@yicheng.finance",
+		"description": "協助成長型企業把財務資料轉成可執行的經營決策，透過問題辨識、治理優化、分析上線與決策追蹤，讓老闆每月看清獲利、現金與風險。",
+		"serviceType": "財務治理顧問",
+		"areaServed": { "@type": "Country", "name": "Taiwan" },
+		"inLanguage": "zh-Hant-TW",
+		"priceRange": "NT$25,000–65,000/月"
+	})}</script>`}
 </svelte:head>
 
 <svelte:window bind:scrollY />
@@ -475,11 +499,9 @@
 <div class="min-h-screen bg-transparent relative z-0 overflow-hidden">
 	<!-- ─── NAV ─── -->
 	<nav
-		class="fixed top-0 inset-x-0 z-50 transition-all duration-300 {scrollY > 20 ? 'bg-white/95 backdrop-blur-md border-b border-[var(--line)] shadow-sm' : 'bg-transparent border-b border-transparent shadow-none'}"
+		class="fixed top-0 inset-x-0 z-50 transition-all duration-300 {scrollY > 20 || mobileMenuOpen ? 'bg-white/95 backdrop-blur-md border-b border-[var(--line)] shadow-sm' : 'bg-transparent border-b border-transparent shadow-none'}"
 	>
-		<div
-			class="max-w-[980px] mx-auto px-6 h-14 flex items-center justify-between"
-		>
+		<div class="max-w-[980px] mx-auto px-6 h-14 flex items-center justify-between">
 			<a href="/" aria-label="奕成財創" class="flex items-center">
 				<img src="/yclogo.svg" alt="奕成財創 Logo" class="h-6 w-auto" />
 			</a>
@@ -488,8 +510,41 @@
 					<a href={link.href} class="nav-link" onclick={(e) => scrollToAnchor(e, link.href)}>{link.label}</a>
 				{/each}
 			</div>
-			<a href="#contact" class="nav-link" onclick={(e) => scrollToAnchor(e, '#contact')}>聯絡我們</a>
+			<a href="#contact" class="nav-link hidden md:block" onclick={(e) => scrollToAnchor(e, '#contact')}>聯絡我們</a>
+			<!-- 漢堡按鈕 (手機版) -->
+			<button
+				class="md:hidden flex flex-col justify-center gap-[5px] p-2 -mr-2"
+				onclick={() => mobileMenuOpen = !mobileMenuOpen}
+				aria-label={mobileMenuOpen ? '關閉選單' : '開啟選單'}
+				aria-expanded={mobileMenuOpen}
+			>
+				<span class="block w-5 h-px bg-[var(--ink)] transition-all duration-300 origin-center {mobileMenuOpen ? 'rotate-45 translate-y-[6px]' : ''}"></span>
+				<span class="block w-5 h-px bg-[var(--ink)] transition-all duration-300 {mobileMenuOpen ? 'opacity-0' : ''}"></span>
+				<span class="block w-5 h-px bg-[var(--ink)] transition-all duration-300 origin-center {mobileMenuOpen ? '-rotate-45 -translate-y-[6px]' : ''}"></span>
+			</button>
 		</div>
+		<!-- 手機版展開選單 -->
+		{#if mobileMenuOpen}
+			<div
+				transition:slide={{ duration: 250 }}
+				class="md:hidden bg-white/95 backdrop-blur-md border-b border-[var(--line)]"
+			>
+				<div class="max-w-[980px] mx-auto px-6 py-2 flex flex-col">
+					{#each navLinks as link}
+						<a
+							href={link.href}
+							class="nav-link py-3.5 border-b border-[var(--line)]"
+							onclick={(e) => { scrollToAnchor(e, link.href); mobileMenuOpen = false; }}
+						>{link.label}</a>
+					{/each}
+					<a
+						href="#contact"
+						class="nav-link py-3.5"
+						onclick={(e) => { scrollToAnchor(e, '#contact'); mobileMenuOpen = false; }}
+					>聯絡我們</a>
+				</div>
+			</div>
+		{/if}
 	</nav>
 
 	<!-- ─── ABSOLUTE MATRIX BACKGROUND ─── -->
