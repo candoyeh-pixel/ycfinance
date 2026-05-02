@@ -675,7 +675,7 @@
 						>
 							<div class="meta uppercase pt-1 transition-opacity duration-300 {activeCase === i ? 'opacity-100' : 'opacity-60 group-hover:opacity-100'}">{c.ind}</div>
 							<div>
-								<h3 class="case-title transition-colors duration-300 {activeCase === i ? 'text-[var(--brand-red)]' : 'group-hover:text-[var(--ink-2)]'}">「{c.title}」</h3>
+								<h3 class="case-title transition-colors duration-300 {activeCase === i ? 'text-[var(--brand-primary)]' : 'group-hover:text-[var(--ink-2)]'}">「{c.title}」</h3>
 								{#if activeCase === i}
 									<div transition:slide={{ duration: 400 }}>
 										<p class="body-copy mt-4 text-[var(--ink-2)]">{c.desc}</p>
@@ -723,7 +723,7 @@
 						use:reveal
 					>
 						<div class="meta uppercase mb-[18px]">{s.en}</div>
-						<div class="stat-num">
+						<div class="stat-num text-[var(--brand-primary)]">
 							{statDisplay[i] || s.num}<span class="unit">{s.unit}</span>
 						</div>
 						<div class="body-copy mt-5">{s.label}</div>
@@ -790,7 +790,7 @@
 							class="w-full text-left flex justify-between items-center group cursor-pointer"
 							onclick={(e) => toggleFaq(i, e)}
 						>
-							<h3 class="faq-q group-hover:text-[var(--primary)] transition-colors duration-300 m-0">{faq.q}</h3>
+							<h3 class="faq-q group-hover:text-[var(--brand-primary)] transition-colors duration-300 m-0">{faq.q}</h3>
 							<div class="faq-icon" class:open={activeFaq === i}>
 								<div class="faq-icon-line-h"></div>
 								<div class="faq-icon-line-v"></div>
