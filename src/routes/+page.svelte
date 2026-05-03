@@ -2,6 +2,7 @@
 	import { ArrowRight } from "lucide-svelte";
 	import { onMount } from "svelte";
 	import { slide } from "svelte/transition";
+	import { caseItems } from "$lib/cases";
 	let scrollY = $state(0);
 
 	let formData = $state({
@@ -115,69 +116,150 @@
 		};
 		document.addEventListener("click", handleClickOutside);
 
-		let matrixTimer: ReturnType<typeof setInterval> | undefined;
+		let chartAnimFrame: number | undefined;
+		let resizeHandler: (() => void) | undefined;
+
 		if (matrixCanvas) {
-			const ctx = matrixCanvas.getContext("2d");
-			if (ctx) {
-				matrixCanvas.width = COLS * CELL_W;
-				matrixCanvas.height = ROWS * CELL_H;
+			const ctxMaybe = matrixCanvas.getContext("2d");
+			if (!ctxMaybe)
+				return () => document.removeEventListener("click", handleClickOutside);
+			const ctx: CanvasRenderingContext2D = ctxMaybe;
+			const ASPECT = CW / CH;
 
-				const currentGrid = Array.from({ length: ROWS }, () =>
-					Array.from(
-						{ length: COLS },
-						() =>
-							allChars[
-								Math.floor(Math.random() * allChars.length)
-							],
-					),
-				);
+			let logW = CW;
+			let logH = CH;
+			let padH = CHART_PADDING.top;
+			let padV = CHART_PADDING.left;
+			let cw = logW - padV * 2;
+			let ch = logH - padH * 2;
 
-				const drawGrid = (grid: string[][]) => {
-					ctx.clearRect(
-						0,
-						0,
-						matrixCanvas.width,
-						matrixCanvas.height,
-					);
-					ctx.fillStyle = "#666666";
-					ctx.font = `800 36px "Noto Serif TC", serif`;
-					ctx.textAlign = "center";
-					ctx.textBaseline = "middle";
-					for (let r = 0; r < ROWS; r++) {
-						for (let c = 0; c < COLS; c++) {
-							ctx.fillText(
-								grid[r][c],
-								c * CELL_W + CELL_W / 2,
-								r * CELL_H + CELL_H / 2,
-							);
-						}
-					}
-				};
-
-				drawGrid(currentGrid);
-				const start = Date.now();
-				matrixTimer = setInterval(() => {
-					if (Date.now() - start >= SCRAMBLE_DURATION) {
-						drawGrid(targetGrid);
-						clearInterval(matrixTimer);
-						return;
-					}
-					for (let r = 0; r < ROWS; r++) {
-						for (let c = 0; c < COLS; c++) {
-							currentGrid[r][c] =
-								allChars[
-									Math.floor(Math.random() * allChars.length)
-								];
-						}
-					}
-					drawGrid(currentGrid);
-				}, SCRAMBLE_INTERVAL);
+			function applySize() {
+				const dpr = window.devicePixelRatio || 1;
+				const vw = window.innerWidth;
+				logW = vw * 2.5;
+				logH = logW / ASPECT;
+				padH = vw < 640 ? 30 : 80;
+				padV = vw < 640 ? 30 : 80;
+				cw = logW - padV * 2;
+				ch = logH - padH * 2;
+				matrixCanvas.width = Math.round(logW * dpr);
+				matrixCanvas.height = Math.round(logH * dpr);
+				ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 			}
+
+			applySize();
+			resizeHandler = applySize;
+			window.addEventListener("resize", applySize);
+
+			function getPoints(data: number[]): [number, number][] {
+				return data.map((y, i) => [
+					padV + (i / (data.length - 1)) * cw,
+					padH + (1 - y) * ch,
+				]);
+			}
+
+			function drawLinePartial(
+				points: [number, number][],
+				alpha: number,
+				drawT: number,
+			) {
+				if (points.length < 2 || drawT <= 0) return;
+				const n = points.length;
+				const totalSegs = n - 1;
+				const segT = drawT * totalSegs;
+				const fullSegs = Math.min(Math.floor(segT), totalSegs);
+				const partial = segT - fullSegs;
+
+				function cp(i: number) {
+					const p0 = points[Math.max(0, i - 1)];
+					const p1 = points[i];
+					const p2 = points[i + 1];
+					const p3 = points[Math.min(n - 1, i + 2)];
+					return {
+						c1x: p1[0] + (p2[0] - p0[0]) / 6,
+						c1y: p1[1] + (p2[1] - p0[1]) / 6,
+						c2x: p2[0] - (p3[0] - p1[0]) / 6,
+						c2y: p2[1] - (p3[1] - p1[1]) / 6,
+						ex: p2[0],
+						ey: p2[1],
+					};
+				}
+
+				ctx.beginPath();
+				ctx.moveTo(points[0][0], points[0][1]);
+
+				for (let i = 0; i < fullSegs; i++) {
+					const { c1x, c1y, c2x, c2y, ex, ey } = cp(i);
+					ctx.bezierCurveTo(c1x, c1y, c2x, c2y, ex, ey);
+				}
+
+				if (fullSegs < totalSegs && partial > 0) {
+					const { c1x, c1y, c2x, c2y, ex, ey } = cp(fullSegs);
+					const ox = points[fullSegs][0];
+					const oy = points[fullSegs][1];
+					const t = partial;
+					const ax = ox + t * (c1x - ox);
+					const ay = oy + t * (c1y - oy);
+					const bx = c1x + t * (c2x - c1x);
+					const by = c1y + t * (c2y - c1y);
+					const cx2 = c2x + t * (ex - c2x);
+					const cy2 = c2y + t * (ey - c2y);
+					const dx = ax + t * (bx - ax);
+					const dy = ay + t * (by - ay);
+					const ex2 = bx + t * (cx2 - bx);
+					const ey2 = by + t * (cy2 - by);
+					const fx = dx + t * (ex2 - dx);
+					const fy = dy + t * (ey2 - dy);
+					ctx.bezierCurveTo(ax, ay, dx, dy, fx, fy);
+				}
+
+				ctx.strokeStyle = `rgba(22, 74, 115, ${alpha})`;
+				ctx.lineWidth = 2.5;
+				ctx.lineJoin = "round";
+				ctx.stroke();
+			}
+
+			const drawStart = Date.now();
+
+			function tick() {
+				const elapsed = Date.now() - drawStart;
+				const rawProgress = Math.min(1, elapsed / CHART_DRAW_MS);
+				const t = elapsed / 1000;
+				const fluctAmt =
+					rawProgress >= 1
+						? Math.min(1, (elapsed - CHART_DRAW_MS) / 1500) * 5
+						: 0;
+
+				ctx.clearRect(0, 0, logW, logH);
+
+				for (let s = 0; s < seriesData.length; s++) {
+					const delay = s * 0.12;
+					const localRaw = Math.max(
+						0,
+						Math.min(1, (rawProgress - delay) / (1 - delay)),
+					);
+					const localEased = 1 - Math.pow(1 - localRaw, 2.5);
+
+					const points = getPoints(seriesData[s]).map(
+						([x, y], i) =>
+							[
+								x,
+								y + Math.sin(t * 0.35 + i * 0.9 + s * 1.3) * fluctAmt,
+							] as [number, number],
+					);
+					drawLinePartial(points, seriesAlpha[s], localEased);
+				}
+
+				chartAnimFrame = requestAnimationFrame(tick);
+			}
+
+			chartAnimFrame = requestAnimationFrame(tick);
 		}
 
 		return () => {
 			document.removeEventListener("click", handleClickOutside);
-			if (matrixTimer) clearInterval(matrixTimer);
+			if (resizeHandler) window.removeEventListener("resize", resizeHandler);
+			if (chartAnimFrame !== undefined) cancelAnimationFrame(chartAnimFrame);
 		};
 	});
 	let submitMessage = $state("");
@@ -237,23 +319,19 @@
 		return { destroy: () => observer.disconnect() };
 	}
 
-	const allChars = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "$"];
-	const COLS = 30;
-	const ROWS = 30;
-	const CELL_W = 54;
-	const CELL_H = 62;
-
-	/* Final target — random each page load */
-	const targetGrid = Array.from({ length: ROWS }, () =>
-		Array.from(
-			{ length: COLS },
-			() => allChars[Math.floor(Math.random() * allChars.length)],
-		),
-	);
-
-	/* ── Hero matrix: scramble → snap ── */
-	const SCRAMBLE_DURATION = 1800;
-	const SCRAMBLE_INTERVAL = 60;
+	/* ── Hero line chart ── */
+	const CW = 1600;
+	const CH = 700;
+	const CHART_PADDING = { top: 80, bottom: 80, left: 80, right: 80 };
+	const CHART_DRAW_MS = 2200;
+	const seriesData: number[][] = [
+		[0.32, 0.40, 0.36, 0.46, 0.54, 0.50, 0.60, 0.66, 0.72, 0.78], // ~45°，中段小回檔
+		[0.20, 0.26, 0.30, 0.36, 0.40, 0.45, 0.50, 0.55, 0.60, 0.65], // ~35°，最平穩
+		[0.48, 0.50, 0.46, 0.50, 0.58, 0.66, 0.76, 0.84, 0.88, 0.94], // ~55°，後段加速
+		[0.65, 0.68, 0.56, 0.42, 0.34, 0.46, 0.60, 0.74, 0.83, 0.88], // V 型反轉
+		[0.22, 0.25, 0.24, 0.40, 0.43, 0.42, 0.62, 0.64, 0.80, 0.83], // 階梯狀
+	];
+	const seriesAlpha = [0.55, 0.18, 0.40, 0.12, 0.28];
 
 	let matrixCanvas: HTMLCanvasElement;
 
@@ -268,19 +346,19 @@
 	const problemCards = [
 		{
 			who: "多品牌電商",
-			text: "會計人員高流動，讓公司錯過",
-			mark: "爆發性成長市場機會",
+			text: "會計人員流動快，",
+			mark: "成長機會常在混亂中流失",
 			rest: "。",
 		},
 		{
 			who: "軟體服務新創",
-			text: "進入融資或募資階段，才發現",
+			text: "準備融資或募資時，",
 			mark: "財務數字無法被投資人與銀行採信",
 			rest: "。",
 		},
 		{
 			who: "製造加工企業",
-			text: "收到稅局罰稅或查核時，才意識到",
+			text: "收到稅局罰單或查核通知後，",
 			mark: "經營模式存在重大合規風險",
 			rest: "。",
 		},
@@ -289,37 +367,6 @@
 			text: "準備擴張新店與新通路時，",
 			mark: "現金流與獲利模型不足以支撐決策",
 			rest: "。",
-		},
-	];
-
-	const caseItems = [
-		{
-			ind: "跨境金融科技",
-			title: "我要看現金和幾個關鍵數字，每次都要等人整理很久。",
-			desc: "公司裡有很多報表，但彼此沒有接起來；每次要資料都得先整理。",
-			result: "募得400萬美金",
-			sub: "通過四大查核",
-		},
-		{
-			ind: "軟體新創公司",
-			title: "我平常就是看銀行餘額，真要談融資才發現數字拿不出去。",
-			desc: "資料平常都交給事務所處理，老闆自己看的數字和報表損益接不起來。",
-			result: "營收達1400萬",
-			sub: "取得900萬投資",
-		},
-		{
-			ind: "活動公關公司",
-			title: "每場活動做完到底賺多少，我其實講不準。",
-			desc: "活動損益和會計帳分開記，現金最緊的時間也看不出來。",
-			result: "活動損益可直接看",
-			sub: "財報與稅報查核完成",
-		},
-		{
-			ind: "國際貿易公司",
-			title: "報表每個月都有，但我一眼就看出怪數字。",
-			desc: "會計和系統都有，但科目、部門別、帳齡表都要先人工重整。",
-			result: "帳齡表可直接看",
-			sub: "管報可直接使用",
 		},
 	];
 
@@ -434,7 +481,7 @@
 			title: "導入期",
 			time: "2～4 週",
 			price: "NT$ 30,000～50,000",
-			desc: "了解你的帳、建立月報模板、對齊科目口徑、定義追蹤單位。",
+			desc: "了解你的帳、建立月報模板、把科目定義講清楚、定義追蹤單位。",
 			note: "一次性費用，可全額折抵月費（單月上限 NT$2,500）",
 		},
 		{
@@ -453,38 +500,38 @@
 		{
 			q: "我已經有會計了，還需要嗎？",
 			a:
-				"需要，而且是互補關係。我們不取代會計與報稅，而是補上財務治理、管理分析與決策追蹤，" +
-				"讓老闆每月看得懂數字、用得了數字。",
+				"需要。會計與報稅照原本流程走，我們補上財務治理、管理分析與決策追蹤。" +
+				"每月會把重點數字整理好，老闆可以直接拿來開會和決策。",
 		},
 		{
 			q: "帳很亂可以合作嗎？",
 			a:
-				"可以，這正是常見起點。我們會先做財務問題辨認，判斷目前帳務可用性與風險，" +
-				"再規劃導入順序，先把月結節奏與口徑穩定下來。",
+				"可以，這很常見。我們會先做財務問題辨認，先看目前帳務能不能支撐管理，" +
+				"再安排導入順序，把月結節奏和科目定義固定下來。",
 		},
 		{
 			q: "每月實際會交付什麼？",
 			a:
-				"視實際需求提供每月交付，可包含月財報與管理報表、現金流預測與異常分析、月會行動清單與追蹤、" +
+				"每月交付會依你們當下需求調整，常見內容包含月財報與管理報表、現金流預測與異常分析、月會行動清單與追蹤、" +
 				"LINE 群同步與合規提醒。",
 		},
 		{
 			q: "最短合作期間多久？",
 			a:
-				"建議以 6 個月為一個治理週期。前期完成口徑對齊與報表上線，中後期才能穩定追蹤與優化決策品質；" +
+				"建議以 6 個月為一個治理週期。前期先把規則與報表架起來，後續就能穩定追蹤與優化決策品質；" +
 				"若交付內容與約定不符，可依合約終止。",
 		},
 		{
 			q: "資料會保密嗎？",
 			a:
 				"會。合約包含完整保密條款，資料僅由授權人員在必要範圍內使用。原始可識別資料只用於本案交付；" +
-				"若用於洞察分析，僅採去識別化與彙總資料，且不影響你的服務權益。",
+				"若用於洞察分析，僅使用去識別化與彙總資料，且不影響你的服務權益。",
 		},
 		{
 			q: "你們跟會計師事務所有什麼差別？",
 			a:
-				"會計師事務所重點在法遵申報與簽證，我們重點在經營治理與決策支持。實務上通常是協作關係：" +
-				"事務所確保法遵，我們確保數字能支撐經營決策。",
+				"會計師事務所主要處理法遵申報與簽證，我們主要處理經營治理與決策支持。" +
+				"多數案件會一起合作，分工很清楚。",
 		},
 	];
 </script>
@@ -685,18 +732,18 @@
 		style="padding-top: var(--sec-top); padding-bottom: var(--sec);"
 	>
 		<div class="wrap">
-			<div class="text-center mb-[clamp(60px,7vw,100px)]">
-				<h2 class="sec-title reveal" use:reveal>
-					奕成財創<span class="sec-en">— About</span>
-				</h2>
-				<p class="sec-intro reveal" use:reveal>
-					許多成長中的公司雖有財務資料，但卻無法支撐決策，
-					<br />
-					老闆不熟悉會計語言，會計人員沒有經營視角，
-					<br />
-					奕成財創幫你把「財務資料」轉成「決策依據」。
-				</p>
-			</div>
+				<div class="text-center mb-[clamp(60px,7vw,100px)]">
+					<h2 class="sec-title reveal" use:reveal>
+						奕成財創<span class="sec-en">— About</span>
+					</h2>
+					<p class="sec-intro reveal" use:reveal>
+						很多成長中的公司都有財務資料，但真正要做決策時常常用不上，
+						<br />
+						老闆要看的重點，和報表呈現方式常常接不起來，
+						<br />
+						奕成財創把資料整理成經營上可以直接使用的數字。
+					</p>
+				</div>
 
 			<div
 				class="max-w-[980px] mx-auto grid md:grid-cols-2 gap-[clamp(40px,6vw,96px)]"
@@ -705,28 +752,28 @@
 					<h3 class="sub-title">
 						我們相信的事<small>What we believe</small>
 					</h3>
-					<p class="body-copy mb-[18px]">
-						公司進入成長期後，產品、通路、人員都在擴張，
-						原本靠經驗就能管理的方式會快速失效。
-						老闆看得到營收，卻不一定看得清獲利、現金與風險。
-					</p>
-					<p class="body-copy">
-						真正有價值的財務資訊，不只要正確，還要能主導經營決策。
-					</p>
+						<p class="body-copy mb-[18px]">
+							公司進入成長期後，產品、通路、人員都在擴張，
+							原本靠經驗就能管理的方式會快速失效。
+							營收大家都會看，但獲利、現金與風險常常沒有即時畫面。
+						</p>
+						<p class="body-copy">
+							真正有價值的財務資訊，是可以直接拿來做經營決定的資訊。
+						</p>
 				</div>
-				<div class="reveal reveal-d1" use:reveal>
-					<h3 class="sub-title">
-						我們在做的事<small>What we do</small>
-					</h3>
-					<p class="body-copy mb-[18px]">
-						我們協助成長型企業把財務數字轉成可執行的經營決策，
-						透過標準化流程釐清問題、優化治理、建立分析與追蹤機制。
-					</p>
-					<p class="body-copy">
-						重點不是多一份報表，而是讓老闆每個月都能看清方向，知道下一步該做什麼。
-					</p>
+					<div class="reveal reveal-d1" use:reveal>
+						<h3 class="sub-title">
+							我們在做的事<small>What we do</small>
+						</h3>
+						<p class="body-copy mb-[18px]">
+							我們協助成長型企業把財務數字轉成可執行的經營決策，
+							透過標準化流程釐清問題、優化治理、建立分析與追蹤機制。
+						</p>
+						<p class="body-copy">
+							我們每月把重點數字整理好，老闆看完就能決定下一步。
+						</p>
+					</div>
 				</div>
-			</div>
 			<div class="max-w-[980px] mx-auto mt-[clamp(52px,6vw,84px)]"></div>
 		</div>
 	</section>
@@ -738,15 +785,15 @@
 		style="padding-top: var(--sec-top); padding-bottom: var(--sec);"
 	>
 		<div class="wrap">
-			<div class="text-center mb-[clamp(60px,7vw,100px)]">
-				<h2 class="sec-title reveal" use:reveal>
-					常見困境<span class="sec-en">— Problem</span>
-				</h2>
-				<p class="sec-intro reveal" use:reveal>
-					同樣的四個問題，每天在老闆心裡反覆出現。<br
-					/>這不是你的問題，這是大多數中小企業主的日常。
-				</p>
-			</div>
+				<div class="text-center mb-[clamp(60px,7vw,100px)]">
+					<h2 class="sec-title reveal" use:reveal>
+						常見困境<span class="sec-en">— Problem</span>
+					</h2>
+					<p class="sec-intro reveal" use:reveal>
+						這四個問題，在很多中小企業都一直重複發生。<br
+						/>很多老闆每天都在面對同樣的壓力。
+					</p>
+				</div>
 
 			<div
 				class="max-w-[1240px] mx-auto grid md:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6"
@@ -766,14 +813,12 @@
 				class="mt-[clamp(80px,8vw,120px)] text-center reveal"
 				use:reveal
 			>
-				<span class="pull-quote-mark">&ldquo;</span>
-				<p class="pull-quote">
-					讓財務治理不再是經營的絆腳石，而是<strong
-						class="pull-quote-em">成長的墊腳石</strong
-					>。
-				</p>
+					<span class="pull-quote-mark">&ldquo;</span>
+					<p class="pull-quote">
+						把財務治理做穩，擴張時就不會一路補洞。
+					</p>
+				</div>
 			</div>
-		</div>
 	</section>
 
 	<!-- ─── CASES ─── -->
@@ -792,13 +837,14 @@
 				</p>
 			</div>
 
-			<div class="border-t border-[var(--line)]">
-				{#each caseItems as c, i}
-					<div class="reveal case-item-wrap" use:reveal>
-						<button
-							class="w-full text-left case-row group cursor-pointer"
-							onclick={(e) => toggleCase(i, e)}
-						>
+				<div class="border-t border-[var(--line)]">
+					{#each caseItems as c, i}
+						<div class="reveal case-item-wrap" use:reveal>
+							<button
+								class="w-full text-left case-row group cursor-pointer"
+								onclick={(e) => toggleCase(i, e)}
+								aria-expanded={activeCase === i}
+							>
 							<div
 								class="meta uppercase pt-1 transition-opacity duration-300 {activeCase ===
 								i
@@ -808,40 +854,45 @@
 								{c.ind}
 							</div>
 							<div>
-								<h3
-									class="case-title transition-colors duration-300 {activeCase ===
-									i
-										? 'text-[var(--brand-primary)]'
-										: 'group-hover:text-[var(--ink-2)]'}"
-								>
-									「{c.title}」
-								</h3>
-								{#if activeCase === i}
-									<div transition:slide={{ duration: 400 }}>
-										<p
-											class="body-copy mt-4 text-[var(--ink-2)]"
-										>
-											{c.desc}
-										</p>
-									</div>
-								{/if}
-							</div>
-							<div class="md:text-right md:min-w-[160px]">
-								<div
+									<h3
+										class="case-title transition-colors duration-300 {activeCase ===
+										i
+											? 'text-[var(--brand-primary)]'
+											: 'group-hover:text-[var(--ink-2)]'}"
+									>
+										「{c.title}」
+									</h3>
+								</div>
+								<div class="md:text-right md:min-w-[160px]">
+									<div
 									class="case-result transition-transform duration-300 {activeCase ===
 									i
 										? 'scale-105 origin-right'
 										: 'group-hover:scale-105 origin-right'}"
-								>
-									{c.result}
+									>
+										{c.result}
+									</div>
 								</div>
-								<div class="meta mt-1 opacity-60">{c.sub}</div>
-							</div>
-						</button>
-					</div>
-				{/each}
+							</button>
+							{#if activeCase === i}
+								<div transition:slide={{ duration: 400 }} class="pb-9 md:pb-11">
+									<p class="body-copy text-[var(--ink-2)] max-w-[760px]">
+										{c.desc}
+									</p>
+									<a
+										href={`/cases/${c.slug}`}
+										class="inline-flex items-center gap-2 mt-5 pb-1 border-b border-[var(--line-2)] text-[var(--ink)] hover:text-[var(--brand-primary)] hover:border-[var(--brand-primary)] transition-colors duration-200"
+										style="font-family: var(--font-serif); font-size: 14px; letter-spacing: 0.08em;"
+									>
+										看完整案例
+										<ArrowRight class="w-3.5 h-3.5" />
+									</a>
+								</div>
+							{/if}
+						</div>
+					{/each}
+				</div>
 			</div>
-		</div>
 	</section>
 
 	<!-- ─── IMPACT & ROI ─── -->
