@@ -122,7 +122,8 @@
 		if (matrixCanvas) {
 			const ctxMaybe = matrixCanvas.getContext("2d");
 			if (!ctxMaybe)
-				return () => document.removeEventListener("click", handleClickOutside);
+				return () =>
+					document.removeEventListener("click", handleClickOutside);
 			const ctx: CanvasRenderingContext2D = ctxMaybe;
 			const ASPECT = CW / CH;
 
@@ -244,7 +245,9 @@
 						([x, y], i) =>
 							[
 								x,
-								y + Math.sin(t * 0.35 + i * 0.9 + s * 1.3) * fluctAmt,
+								y +
+									Math.sin(t * 0.35 + i * 0.9 + s * 1.3) *
+										fluctAmt,
 							] as [number, number],
 					);
 					drawLinePartial(points, seriesAlpha[s], localEased);
@@ -258,8 +261,10 @@
 
 		return () => {
 			document.removeEventListener("click", handleClickOutside);
-			if (resizeHandler) window.removeEventListener("resize", resizeHandler);
-			if (chartAnimFrame !== undefined) cancelAnimationFrame(chartAnimFrame);
+			if (resizeHandler)
+				window.removeEventListener("resize", resizeHandler);
+			if (chartAnimFrame !== undefined)
+				cancelAnimationFrame(chartAnimFrame);
 		};
 	});
 	let submitMessage = $state("");
@@ -325,13 +330,13 @@
 	const CHART_PADDING = { top: 80, bottom: 80, left: 80, right: 80 };
 	const CHART_DRAW_MS = 2200;
 	const seriesData: number[][] = [
-		[0.32, 0.40, 0.36, 0.46, 0.54, 0.50, 0.60, 0.66, 0.72, 0.78], // ~45°，中段小回檔
-		[0.20, 0.26, 0.30, 0.36, 0.40, 0.45, 0.50, 0.55, 0.60, 0.65], // ~35°，最平穩
-		[0.48, 0.50, 0.46, 0.50, 0.58, 0.66, 0.76, 0.84, 0.88, 0.94], // ~55°，後段加速
-		[0.65, 0.68, 0.56, 0.42, 0.34, 0.46, 0.60, 0.74, 0.83, 0.88], // V 型反轉
-		[0.22, 0.25, 0.24, 0.40, 0.43, 0.42, 0.62, 0.64, 0.80, 0.83], // 階梯狀
+		[0.32, 0.4, 0.36, 0.46, 0.54, 0.5, 0.6, 0.66, 0.72, 0.78], // ~45°，中段小回檔
+		[0.2, 0.26, 0.3, 0.36, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65], // ~35°，最平穩
+		[0.48, 0.5, 0.46, 0.5, 0.58, 0.66, 0.76, 0.84, 0.88, 0.94], // ~55°，後段加速
+		[0.65, 0.68, 0.56, 0.42, 0.34, 0.46, 0.6, 0.74, 0.83, 0.88], // V 型反轉
+		[0.22, 0.25, 0.24, 0.4, 0.43, 0.42, 0.62, 0.64, 0.8, 0.83], // 階梯狀
 	];
-	const seriesAlpha = [0.55, 0.18, 0.40, 0.12, 0.28];
+	const seriesAlpha = [0.55, 0.18, 0.4, 0.12, 0.28];
 
 	let matrixCanvas: HTMLCanvasElement;
 
@@ -469,7 +474,7 @@
 
 	const processSteps = [
 		{
-			num: "01",
+			num: "1",
 			title: "問題辨認",
 			time: "2 小時",
 			price: "NT$ 3,000",
@@ -477,15 +482,15 @@
 			note: "簽約後全額抵扣",
 		},
 		{
-			num: "02",
+			num: "2",
 			title: "導入期",
 			time: "2～4 週",
 			price: "NT$ 30,000～50,000",
 			desc: "了解你的帳、建立月報模板、把科目定義講清楚、定義追蹤單位。",
-			note: "一次性費用，可全額折抵月費（單月上限 NT$2,500）",
+			note: "一次性費用，可折抵月費",
 		},
 		{
-			num: "03",
+			num: "3",
 			title: "每月交付內容",
 			time: "持續",
 			price: "NT$ 25,000～65,000/月",
@@ -520,6 +525,12 @@
 			a:
 				"建議以 6 個月為一個治理週期。前期先把規則與報表架起來，後續就能穩定追蹤與優化決策品質；" +
 				"若交付內容與約定不符，可依合約終止。",
+		},
+		{
+			q: "現在很多公司都在用 AI 記帳、AI 分析，你們還能幫上什麼？",
+			a:
+				"AI 工具可以加快整理與產出。真正卡住的通常是資料來源分散、規則不一致、歷史帳務沒清乾淨。" +
+				"我們會先把這些底層問題處理好，再把報表和決策會議接起來，讓 AI 產出的數字可以直接拿來做經營判斷、融資溝通和每月追蹤。",
 		},
 		{
 			q: "資料會保密嗎？",
@@ -597,7 +608,7 @@
 			class="max-w-[980px] mx-auto px-6 h-14 flex items-center justify-between"
 		>
 			<a href="/" aria-label="奕成財創" class="flex items-center">
-				<img src="/yclogo.svg" alt="奕成財創 Logo" class="h-6 w-auto" />
+				<img src="/yclogo.svg" alt="奕成財創 Logo" class="h-5 w-auto" />
 			</a>
 			<div class="hidden md:flex items-center gap-10">
 				{#each navLinks as link}
@@ -732,18 +743,18 @@
 		style="padding-top: var(--sec-top); padding-bottom: var(--sec);"
 	>
 		<div class="wrap">
-				<div class="text-center mb-[clamp(60px,7vw,100px)]">
-					<h2 class="sec-title reveal" use:reveal>
-						奕成財創<span class="sec-en">— About</span>
-					</h2>
-					<p class="sec-intro reveal" use:reveal>
-						很多成長中的公司都有財務資料，但真正要做決策時常常用不上，
-						<br />
-						老闆要看的重點，和報表呈現方式常常接不起來，
-						<br />
-						奕成財創把資料整理成經營上可以直接使用的數字。
-					</p>
-				</div>
+			<div class="text-center mb-[clamp(60px,7vw,100px)]">
+				<h2 class="sec-title reveal" use:reveal>
+					奕成財創<span class="sec-en">— About</span>
+				</h2>
+				<p class="sec-intro reveal" use:reveal>
+					很多成長中的公司都有財務資料，但真正要做決策時常常用不上，
+					<br />
+					老闆要看的重點，和報表呈現方式常常接不起來，
+					<br />
+					奕成財創把資料整理成經營上可以直接使用的數字。
+				</p>
+			</div>
 
 			<div
 				class="max-w-[980px] mx-auto grid md:grid-cols-2 gap-[clamp(40px,6vw,96px)]"
@@ -752,28 +763,28 @@
 					<h3 class="sub-title">
 						我們相信的事<small>What we believe</small>
 					</h3>
-						<p class="body-copy mb-[18px]">
-							公司進入成長期後，產品、通路、人員都在擴張，
-							原本靠經驗就能管理的方式會快速失效。
-							營收大家都會看，但獲利、現金與風險常常沒有即時畫面。
-						</p>
-						<p class="body-copy">
-							真正有價值的財務資訊，是可以直接拿來做經營決定的資訊。
-						</p>
+					<p class="body-copy mb-[18px]">
+						公司進入成長期後，產品、通路、人員都在擴張，
+						原本靠經驗就能管理的方式會快速失效。
+						營收大家都會看，但獲利、現金與風險常常沒有即時畫面。
+					</p>
+					<p class="body-copy">
+						真正有價值的財務資訊，是可以直接拿來做經營決定的資訊。
+					</p>
 				</div>
-					<div class="reveal reveal-d1" use:reveal>
-						<h3 class="sub-title">
-							我們在做的事<small>What we do</small>
-						</h3>
-						<p class="body-copy mb-[18px]">
-							我們協助成長型企業把財務數字轉成可執行的經營決策，
-							透過標準化流程釐清問題、優化治理、建立分析與追蹤機制。
-						</p>
-						<p class="body-copy">
-							我們每月把重點數字整理好，老闆看完就能決定下一步。
-						</p>
-					</div>
+				<div class="reveal reveal-d1" use:reveal>
+					<h3 class="sub-title">
+						我們在做的事<small>What we do</small>
+					</h3>
+					<p class="body-copy mb-[18px]">
+						我們協助成長型企業把財務數字轉成可執行的經營決策，
+						透過標準化流程釐清問題、優化治理、建立分析與追蹤機制。
+					</p>
+					<p class="body-copy">
+						我們每月把重點數字整理好，老闆看完就能決定下一步。
+					</p>
 				</div>
+			</div>
 			<div class="max-w-[980px] mx-auto mt-[clamp(52px,6vw,84px)]"></div>
 		</div>
 	</section>
@@ -785,15 +796,15 @@
 		style="padding-top: var(--sec-top); padding-bottom: var(--sec);"
 	>
 		<div class="wrap">
-				<div class="text-center mb-[clamp(60px,7vw,100px)]">
-					<h2 class="sec-title reveal" use:reveal>
-						常見困境<span class="sec-en">— Problem</span>
-					</h2>
-					<p class="sec-intro reveal" use:reveal>
-						這四個問題，在很多中小企業都一直重複發生。<br
-						/>很多老闆每天都在面對同樣的壓力。
-					</p>
-				</div>
+			<div class="text-center mb-[clamp(60px,7vw,100px)]">
+				<h2 class="sec-title reveal" use:reveal>
+					常見困境<span class="sec-en">— Problem</span>
+				</h2>
+				<p class="sec-intro reveal" use:reveal>
+					這四個問題，在很多中小企業都一直重複發生。<br
+					/>很多老闆每天都在面對同樣的壓力。
+				</p>
+			</div>
 
 			<div
 				class="max-w-[1240px] mx-auto grid md:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6"
@@ -813,12 +824,10 @@
 				class="mt-[clamp(80px,8vw,120px)] text-center reveal"
 				use:reveal
 			>
-					<span class="pull-quote-mark">&ldquo;</span>
-					<p class="pull-quote">
-						把財務治理做穩，擴張時就不會一路補洞。
-					</p>
-				</div>
+				<span class="pull-quote-mark">&ldquo;</span>
+				<p class="pull-quote">把財務治理做穩，擴張時就不會一路補洞。</p>
 			</div>
+		</div>
 	</section>
 
 	<!-- ─── CASES ─── -->
@@ -837,14 +846,14 @@
 				</p>
 			</div>
 
-				<div class="border-t border-[var(--line)]">
-					{#each caseItems as c, i}
-						<div class="reveal case-item-wrap" use:reveal>
-							<button
-								class="w-full text-left case-row group cursor-pointer"
-								onclick={(e) => toggleCase(i, e)}
-								aria-expanded={activeCase === i}
-							>
+			<div class="border-t border-[var(--line)]">
+				{#each caseItems as c, i}
+					<div class="reveal case-item-wrap" use:reveal>
+						<button
+							class="w-full text-left case-row group cursor-pointer"
+							onclick={(e) => toggleCase(i, e)}
+							aria-expanded={activeCase === i}
+						>
 							<div
 								class="meta uppercase pt-1 transition-opacity duration-300 {activeCase ===
 								i
@@ -854,45 +863,50 @@
 								{c.ind}
 							</div>
 							<div>
-									<h3
-										class="case-title transition-colors duration-300 {activeCase ===
-										i
-											? 'text-[var(--brand-primary)]'
-											: 'group-hover:text-[var(--ink-2)]'}"
-									>
-										「{c.title}」
-									</h3>
-								</div>
-								<div class="md:text-right md:min-w-[160px]">
-									<div
+								<h3
+									class="case-title transition-colors duration-300 {activeCase ===
+									i
+										? 'text-[var(--brand-primary)]'
+										: 'group-hover:text-[var(--ink-2)]'}"
+								>
+									「{c.title}」
+								</h3>
+							</div>
+							<div class="md:text-right md:min-w-[160px]">
+								<div
 									class="case-result transition-transform duration-300 {activeCase ===
 									i
 										? 'scale-105 origin-right'
 										: 'group-hover:scale-105 origin-right'}"
-									>
-										{c.result}
-									</div>
+								>
+									{c.result}
 								</div>
-							</button>
-							{#if activeCase === i}
-								<div transition:slide={{ duration: 400 }} class="pb-9 md:pb-11">
-									<p class="body-copy text-[var(--ink-2)] max-w-[760px]">
-										{c.desc}
-									</p>
-									<a
-										href={`/cases/${c.slug}`}
-										class="inline-flex items-center gap-2 mt-5 pb-1 border-b border-[var(--line-2)] text-[var(--ink)] hover:text-[var(--brand-primary)] hover:border-[var(--brand-primary)] transition-colors duration-200"
-										style="font-family: var(--font-serif); font-size: 14px; letter-spacing: 0.08em;"
-									>
-										看完整案例
-										<ArrowRight class="w-3.5 h-3.5" />
-									</a>
-								</div>
-							{/if}
-						</div>
-					{/each}
-				</div>
+							</div>
+						</button>
+						{#if activeCase === i}
+							<div
+								transition:slide={{ duration: 400 }}
+								class="pb-9 md:pb-11"
+							>
+								<p
+									class="body-copy text-[var(--ink-2)] max-w-[760px]"
+								>
+									{c.desc}
+								</p>
+								<a
+									href={`/cases/${c.slug}`}
+									class="inline-flex items-center gap-2 mt-5 pb-1 border-b border-[var(--line-2)] text-[var(--ink)] hover:text-[var(--brand-primary)] hover:border-[var(--brand-primary)] transition-colors duration-200"
+									style="font-family: var(--font-serif); font-size: 14px; letter-spacing: 0.08em;"
+								>
+									看完整案例
+									<ArrowRight class="w-3.5 h-3.5" />
+								</a>
+							</div>
+						{/if}
+					</div>
+				{/each}
 			</div>
+		</div>
 	</section>
 
 	<!-- ─── IMPACT & ROI ─── -->
@@ -995,7 +1009,10 @@
 	>
 		<div class="wrap">
 			<div class="max-w-[920px] mx-auto">
-				<h2 class="sec-title reveal mb-[clamp(48px,6vw,80px)]" use:reveal>
+				<h2
+					class="sec-title reveal mb-[clamp(48px,6vw,80px)]"
+					use:reveal
+				>
 					常見問題<span class="sec-en">— FAQ</span>
 				</h2>
 			</div>
@@ -1330,11 +1347,15 @@
 			>
 				<div>
 					<div class="flex items-center gap-4">
-						<a href="/" class="inline-block shrink-0" aria-label="奕成財創">
+						<a
+							href="/"
+							class="inline-block shrink-0"
+							aria-label="奕成財創"
+						>
 							<img
 								src="/yclogo.svg"
 								alt="奕成財創 Logo"
-								class="h-8 w-auto opacity-90 hover:opacity-100 transition-opacity"
+								class="h-6 w-auto opacity-90 hover:opacity-100 transition-opacity"
 							/>
 						</a>
 						<p class="body-copy m-0 max-w-[440px]">
@@ -1349,7 +1370,7 @@
 						>
 					</div>
 				</div>
-					<div class="foot-meta md:text-right" style="line-height: 1.8;">
+				<div class="foot-meta md:text-right" style="line-height: 1.8;">
 					<div>&copy; 2026 奕成財創</div>
 					<div>Fractional CFO · 財務治理與決策支持</div>
 					<div>資料保密與隱私保護</div>
