@@ -7,6 +7,23 @@ const CONTACT_TO_EMAIL = env.CONTACT_TO_EMAIL ?? 'cando.yeh@ycfinance.tw';
 const CONTACT_FROM_EMAIL = env.CONTACT_FROM_EMAIL ?? 'contact-form@yicheng.finance';
 const SENDMAIL_PATH = env.SENDMAIL_PATH ?? '/usr/sbin/sendmail';
 
+/* ── Rate limiting (in-memory, per IP) ── */
+const rateMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT = 5;
+const RATE_WINDOW_MS = 15 * 60 * 1000;
+
+function checkRateLimit(ip: string): boolean {
+	const now = Date.now();
+	const entry = rateMap.get(ip);
+	if (!entry || now > entry.resetAt) {
+		rateMap.set(ip, { count: 1, resetAt: now + RATE_WINDOW_MS });
+		return true;
+	}
+	if (entry.count >= RATE_LIMIT) return false;
+	entry.count++;
+	return true;
+}
+
 type ContactPayload = {
 	companyName: string;
 	name: string;
@@ -186,8 +203,16 @@ async function sendViaSendmail(data: ContactPayload) {
 	});
 }
 
-export const POST: RequestHandler = async ({ request }) => {
+export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	try {
+		const ip = getClientAddress();
+		if (!checkRateLimit(ip)) {
+			return json(
+				{ success: false, message: '請求過於頻繁，請稍後再試。' },
+				{ status: 429 }
+			);
+		}
+
 		const rawData = (await request.json()) as Record<string, unknown>;
 		const data = buildContactPayload(rawData);
 		const validationError = validatePayload(data);
@@ -207,7 +232,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		return json(
 			{
 				success: false,
-				message: '寄信失敗，請稍後再試，或直接來信至 cando.yeh@ycfinance.tw'
+				message: `寄信失敗，請稍後再試，或直接來信至 ${CONTACT_TO_EMAIL}`
 			},
 			{ status: 500 }
 		);

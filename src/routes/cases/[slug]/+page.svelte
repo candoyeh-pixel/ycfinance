@@ -11,12 +11,31 @@
 		name="description"
 		content={`${data.caseStudy.ind}案例：${data.caseStudy.title}`}
 	/>
+	<link rel="canonical" href={`https://yicheng.finance/cases/${data.caseStudy.slug}`} />
+
+	<!-- Open Graph -->
+	<meta property="og:type" content="article" />
+	<meta property="og:url" content={`https://yicheng.finance/cases/${data.caseStudy.slug}`} />
+	<meta property="og:title" content={`${data.caseStudy.ind}｜奕成財創案例`} />
+	<meta property="og:description" content={`${data.caseStudy.ind}案例：${data.caseStudy.title}`} />
+	<meta property="og:image" content="https://yicheng.finance/og-image.svg" />
+	<meta property="og:image:type" content="image/svg+xml" />
+	<meta property="og:image:width" content="1200" />
+	<meta property="og:image:height" content="630" />
+	<meta property="og:locale" content="zh_TW" />
+	<meta property="og:site_name" content="奕成財創" />
+
+	<!-- Twitter Card -->
+	<meta name="twitter:card" content="summary_large_image" />
+	<meta name="twitter:title" content={`${data.caseStudy.ind}｜奕成財創案例`} />
+	<meta name="twitter:description" content={`${data.caseStudy.ind}案例：${data.caseStudy.title}`} />
+	<meta name="twitter:image" content="https://yicheng.finance/og-image.svg" />
 </svelte:head>
 
 <main class="min-h-screen bg-[var(--bg)]">
 	<header class="border-b border-[var(--line)] bg-white/95 backdrop-blur-sm">
 		<div class="max-w-[980px] mx-auto px-6 h-14 flex items-center justify-between">
-			<a href="/" class="inline-flex items-center" aria-label="回首頁">
+			<a href="/" class="inline-block shrink-0" aria-label="回首頁">
 				<img src="/yclogo.svg" alt="奕成財創 Logo" class="h-6 w-auto" />
 			</a>
 			<a
@@ -57,7 +76,7 @@
 				>
 					成果
 				</h2>
-				<ul class="space-y-3 pl-5">
+				<ul class="space-y-3 pl-5 list-disc">
 					{#each data.caseStudy.outcomes as outcome}
 						<li class="body-copy text-[var(--ink-2)]">{outcome}</li>
 					{/each}

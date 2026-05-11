@@ -117,7 +117,6 @@
 		document.addEventListener("click", handleClickOutside);
 
 		let chartAnimFrame: number | undefined;
-		let resizeHandler: (() => void) | undefined;
 
 		if (matrixCanvas) {
 			const ctxMaybe = matrixCanvas.getContext("2d");
@@ -126,6 +125,11 @@
 					document.removeEventListener("click", handleClickOutside);
 			const ctx: CanvasRenderingContext2D = ctxMaybe;
 			const ASPECT = CW / CH;
+
+			/* 掛載時拍下視窗尺寸後就鎖死，後續 resize 不再觸發 */
+			const pinnedVw = window.innerWidth;
+			const pinnedVh = window.innerHeight;
+			const wrapperHeightPx = pinnedVh * 1.5;
 
 			let logW = CW;
 			let logH = CH;
@@ -136,7 +140,7 @@
 
 			function applySize() {
 				const dpr = window.devicePixelRatio || 1;
-				const vw = window.innerWidth;
+				const vw = pinnedVw;
 				logW = vw * 2.5;
 				logH = logW / ASPECT;
 				padH = vw < 640 ? 30 : 80;
@@ -149,8 +153,12 @@
 			}
 
 			applySize();
-			resizeHandler = applySize;
-			window.addEventListener("resize", applySize);
+
+			/* 把原本百分比/vh 的 CSS 換成 px，視窗縮放時位置不再位移 */
+			pinnedWrapperHeight = wrapperHeightPx + "px";
+			pinnedCanvasWidth = logW + "px";
+			pinnedCanvasLeft = pinnedVw * -0.9 + "px";
+			pinnedCanvasBottom = wrapperHeightPx * 0.15 + "px";
 
 			function getPoints(data: number[]): [number, number][] {
 				return data.map((y, i) => [
@@ -161,6 +169,7 @@
 
 			function drawLinePartial(
 				points: [number, number][],
+				color: string,
 				alpha: number,
 				drawT: number,
 			) {
@@ -214,7 +223,7 @@
 					ctx.bezierCurveTo(ax, ay, dx, dy, fx, fy);
 				}
 
-				ctx.strokeStyle = `rgba(22, 74, 115, ${alpha})`;
+				ctx.strokeStyle = `rgba(${color}, ${alpha})`;
 				ctx.lineWidth = 2.5;
 				ctx.lineJoin = "round";
 				ctx.stroke();
@@ -223,6 +232,12 @@
 			const drawStart = Date.now();
 
 			function tick() {
+				/* 捲出英雄區（opacity 已到最低）時跳過繪製，節省 CPU */
+				if (window.scrollY > 600) {
+					chartAnimFrame = requestAnimationFrame(tick);
+					return;
+				}
+
 				const elapsed = Date.now() - drawStart;
 				const rawProgress = Math.min(1, elapsed / CHART_DRAW_MS);
 				const t = elapsed / 1000;
@@ -234,7 +249,7 @@
 				ctx.clearRect(0, 0, logW, logH);
 
 				for (let s = 0; s < seriesData.length; s++) {
-					const delay = s * 0.12;
+					const delay = s * 0.07;
 					const localRaw = Math.max(
 						0,
 						Math.min(1, (rawProgress - delay) / (1 - delay)),
@@ -250,7 +265,12 @@
 										fluctAmt,
 							] as [number, number],
 					);
-					drawLinePartial(points, seriesAlpha[s], localEased);
+					drawLinePartial(
+						points,
+						seriesColor[s],
+						seriesAlpha[s],
+						localEased,
+					);
 				}
 
 				chartAnimFrame = requestAnimationFrame(tick);
@@ -261,8 +281,6 @@
 
 		return () => {
 			document.removeEventListener("click", handleClickOutside);
-			if (resizeHandler)
-				window.removeEventListener("resize", resizeHandler);
 			if (chartAnimFrame !== undefined)
 				cancelAnimationFrame(chartAnimFrame);
 		};
@@ -329,16 +347,42 @@
 	const CH = 700;
 	const CHART_PADDING = { top: 80, bottom: 80, left: 80, right: 80 };
 	const CHART_DRAW_MS = 2200;
+	/* 色票：深藍（品牌主色）、朱紅、墨綠 */
+	const NAVY = "22, 74, 115";
+	const VERMILION = "168, 57, 47";
+	const INK_GREEN = "31, 77, 63";
+
 	const seriesData: number[][] = [
-		[0.32, 0.4, 0.36, 0.46, 0.54, 0.5, 0.6, 0.66, 0.72, 0.78], // ~45°，中段小回檔
-		[0.2, 0.26, 0.3, 0.36, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65], // ~35°，最平穩
-		[0.48, 0.5, 0.46, 0.5, 0.58, 0.66, 0.76, 0.84, 0.88, 0.94], // ~55°，後段加速
+		[0.3, 0.4, 0.36, 0.46, 0.54, 0.5, 0.62, 0.68, 0.76, 0.82], // 穩健上升（中段小回）
+		[0.55, 0.54, 0.56, 0.55, 0.57, 0.55, 0.56, 0.58, 0.56, 0.57], // 橫盤整理
+		[0.42, 0.44, 0.43, 0.45, 0.5, 0.58, 0.7, 0.82, 0.9, 0.95], // 後段加速突破
 		[0.65, 0.68, 0.56, 0.42, 0.34, 0.46, 0.6, 0.74, 0.83, 0.88], // V 型反轉
-		[0.22, 0.25, 0.24, 0.4, 0.43, 0.42, 0.62, 0.64, 0.8, 0.83], // 階梯狀
+		[0.3, 0.45, 0.6, 0.72, 0.8, 0.78, 0.7, 0.58, 0.48, 0.42], // 倒 V，頭部回落
+		[0.2, 0.35, 0.5, 0.62, 0.7, 0.74, 0.76, 0.78, 0.8, 0.82], // 朱紅主線：早段陡升後高位盤整
+		[0.85, 0.82, 0.78, 0.74, 0.68, 0.6, 0.55, 0.48, 0.42, 0.36], // 墨綠主線：長線下行
+		[0.72, 0.78, 0.68, 0.74, 0.7, 0.76, 0.72, 0.8, 0.74, 0.78], // 朱紅副線：高位震盪
+		[0.18, 0.2, 0.32, 0.34, 0.3, 0.45, 0.48, 0.46, 0.62, 0.65], // 墨綠副線：階梯式攀升
 	];
-	const seriesAlpha = [0.55, 0.18, 0.4, 0.12, 0.28];
+	const seriesColor = [
+		NAVY,
+		NAVY,
+		NAVY,
+		NAVY,
+		NAVY,
+		VERMILION,
+		INK_GREEN,
+		VERMILION,
+		INK_GREEN,
+	];
+	const seriesAlpha = [0.55, 0.18, 0.4, 0.12, 0.28, 0.42, 0.32, 0.16, 0.18];
 
 	let matrixCanvas: HTMLCanvasElement;
+
+	/* 圖表容器與 canvas 的鎖定尺寸，掛載時計算為 px，之後不隨視窗縮放 */
+	let pinnedWrapperHeight = $state("150vh");
+	let pinnedCanvasWidth = $state("250%");
+	let pinnedCanvasLeft = $state("-90%");
+	let pinnedCanvasBottom = $state("15%");
 
 	const navLinks = [
 		{ href: "#about", label: "關於" },
@@ -563,7 +607,8 @@
 		property="og:description"
 		content="協助年營收 3,000 萬以上、正在擴張的企業，把財務資料轉成可執行的經營決策。"
 	/>
-	<meta property="og:image" content="https://yicheng.finance/og-image.png" />
+	<meta property="og:image" content="https://yicheng.finance/og-image.svg" />
+	<meta property="og:image:type" content="image/svg+xml" />
 	<meta property="og:image:width" content="1200" />
 	<meta property="og:image:height" content="630" />
 	<meta property="og:locale" content="zh_TW" />
@@ -576,7 +621,7 @@
 		name="twitter:description"
 		content="協助年營收 3,000 萬以上、正在擴張的企業，把財務資料轉成可執行的經營決策。"
 	/>
-	<meta name="twitter:image" content="https://yicheng.finance/og-image.png" />
+	<meta name="twitter:image" content="https://yicheng.finance/og-image.svg" />
 
 	<!-- JSON-LD Structured Data -->
 	{@html `<script type="application/ld+json">${JSON.stringify({
@@ -683,15 +728,15 @@
 	<div
 		class="absolute inset-0 pointer-events-none -z-10"
 		style="perspective: 3000px; perspective-origin: 100% 100%; transform: translateY({scrollY *
-			0.4}px); height: 150vh;"
+			0.4}px); height: {pinnedWrapperHeight};"
 	>
 		<canvas
 			bind:this={matrixCanvas}
 			class="select-none absolute transition-opacity duration-300"
 			aria-hidden="true"
 			style="
-				bottom: 15%; left: -90%;
-				width: 250%; height: auto;
+				bottom: {pinnedCanvasBottom}; left: {pinnedCanvasLeft};
+				width: {pinnedCanvasWidth}; height: auto;
 				transform: rotateX(-20deg) rotateY(0deg) rotateZ(-20deg);
 				transform-origin: center center;
 				opacity: {Math.max(0.08, 1 - scrollY / 600)};
@@ -1090,12 +1135,14 @@
 						<div
 							class="flex items-baseline gap-2 border-b border-[var(--line)] pb-2"
 						>
-							<span
+							<label
+								for="field-company"
 								class="whitespace-nowrap"
 								style="font-family: var(--font-serif); font-size: var(--text-nav); color: var(--ink);"
-								>公司名稱</span
+								>公司名稱</label
 							>
 							<input
+								id="field-company"
 								type="text"
 								bind:value={formData.companyName}
 								required
@@ -1106,12 +1153,14 @@
 						<div
 							class="flex items-baseline gap-2 border-b border-[var(--line)] pb-2"
 						>
-							<span
+							<label
+								for="field-name"
 								class="whitespace-nowrap"
 								style="font-family: var(--font-serif); font-size: var(--text-nav); color: var(--ink);"
-								>姓名</span
+								>姓名</label
 							>
 							<input
+								id="field-name"
 								type="text"
 								bind:value={formData.name}
 								required
@@ -1124,12 +1173,14 @@
 						<div
 							class="flex items-baseline gap-2 border-b border-[var(--line)] pb-2"
 						>
-							<span
+							<label
+								for="field-phone"
 								class="whitespace-nowrap"
 								style="font-family: var(--font-serif); font-size: var(--text-nav); color: var(--ink);"
-								>電話</span
+								>電話</label
 							>
 							<input
+								id="field-phone"
 								type="tel"
 								bind:value={formData.phone}
 								required
@@ -1140,12 +1191,14 @@
 						<div
 							class="flex items-baseline gap-2 border-b border-[var(--line)] pb-2"
 						>
-							<span
+							<label
+								for="field-email"
 								class="whitespace-nowrap"
 								style="font-family: var(--font-serif); font-size: var(--text-nav); color: var(--ink);"
-								>Email</span
+								>Email</label
 							>
 							<input
+								id="field-email"
 								type="email"
 								bind:value={formData.email}
 								required
@@ -1307,7 +1360,7 @@
 						</div>
 					</div>
 
-					<div class="flex justify-center pt-8">
+					<div class="flex flex-col sm:flex-row items-center justify-center gap-8 pt-8">
 						<button
 							type="submit"
 							disabled={isSubmitting}
@@ -1318,6 +1371,16 @@
 								<ArrowRight class="w-3.5 h-3.5" />
 							{/if}
 						</button>
+						<div class="flex items-center gap-3">
+							<img
+								src="/line-qrcode.png"
+								alt="奕成財創官方 LINE QR Code"
+								width="72"
+								height="72"
+								class="border border-[var(--line)] p-1 shrink-0"
+							/>
+							<span class="meta" style="line-height: 1.7; font-style: normal; letter-spacing: 0.1em;">官方 LINE<br />掃碼加入</span>
+						</div>
 					</div>
 
 					{#if submitMessage}
@@ -1369,6 +1432,7 @@
 							>contact@yicheng.finance</a
 						>
 					</div>
+
 				</div>
 				<div class="foot-meta md:text-right" style="line-height: 1.8;">
 					<div>&copy; 2026 奕成財創</div>

@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FCFCFC"/>
+      <stop offset="100%" stop-color="#F2F2EF"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- Left brand stripe -->
+  <rect x="0" y="0" width="5" height="630" fill="#164A73"/>
+
+  <!-- Bottom rule -->
+  <rect x="0" y="600" width="1200" height="1" fill="#E5E3DD"/>
+
+  <!-- Label -->
+  <text x="80" y="150"
+    font-family="Georgia, 'Times New Roman', serif"
+    font-size="15"
+    fill="#8A8A85"
+    letter-spacing="5"
+    font-style="italic">FRACTIONAL CFO FOR SMBS</text>
+
+  <!-- Main title -->
+  <text x="80" y="270"
+    font-family="'Noto Serif TC', 'Songti SC', 'STSong', 'SimSun', serif"
+    font-size="82"
+    fill="#1A1A1A"
+    letter-spacing="10"
+    font-weight="400">奕成財創</text>
+
+  <!-- Subtitle -->
+  <text x="80" y="340"
+    font-family="'Noto Serif TC', 'Songti SC', 'STSong', 'SimSun', serif"
+    font-size="26"
+    fill="#3D3D3D"
+    letter-spacing="6"
+    font-weight="400">成長型企業財務治理</text>
+
+  <!-- Accent divider -->
+  <rect x="80" y="368" width="220" height="1.5" fill="#B8893A"/>
+
+  <!-- Tagline -->
+  <text x="80" y="430"
+    font-family="'Noto Serif TC', 'Songti SC', 'STSong', 'SimSun', serif"
+    font-size="21"
+    fill="#8A8A85"
+    letter-spacing="3"
+    font-weight="400">讓財務數字，支撐你的下一步決策</text>
+
+  <!-- URL -->
+  <text x="80" y="554"
+    font-family="Georgia, 'Times New Roman', serif"
+    font-size="17"
+    fill="#8A8A85"
+    letter-spacing="2"
+    font-style="italic">yicheng.finance</text>
+
+  <!-- Decorative chart lines (right side) -->
+  <g opacity="0.13">
+    <!-- Navy: steady rise -->
+    <polyline points="700,560 790,450 880,370 970,260 1070,180 1160,110"
+      stroke="#164A73" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Navy: late acceleration -->
+    <polyline points="700,580 790,540 880,510 970,460 1070,340 1160,200"
+      stroke="#164A73" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Vermilion: V-shape recovery -->
+    <polyline points="700,320 790,380 880,430 970,360 1070,250 1160,160"
+      stroke="#A8392F" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Navy: flat then surge -->
+    <polyline points="700,480 790,470 880,465 970,420 1070,300 1160,220"
+      stroke="#164A73" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Ink green: declining -->
+    <polyline points="700,220 790,260 880,300 970,345 1070,390 1160,430"
+      stroke="#1F4D3F" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>
